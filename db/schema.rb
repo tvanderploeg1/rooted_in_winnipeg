@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_17_015819) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_17_034039) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -46,6 +46,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_17_015819) do
     t.datetime "created_at", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_categories_on_name", unique: true
   end
 
   create_table "order_items", force: :cascade do |t|
@@ -55,6 +56,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_17_015819) do
     t.integer "quantity", null: false
     t.integer "unit_price_cents", null: false
     t.datetime "updated_at", null: false
+    t.index ["order_id", "product_id"], name: "index_order_items_on_order_id_and_product_id", unique: true
     t.index ["order_id"], name: "index_order_items_on_order_id"
     t.index ["product_id"], name: "index_order_items_on_product_id"
   end
@@ -63,10 +65,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_17_015819) do
     t.datetime "created_at", null: false
     t.string "province_snapshot"
     t.string "shipping_address"
-    t.string "status", null: false
+    t.string "status", default: "pending", null: false
     t.string "stripe_customer_id"
     t.string "stripe_payment_id"
-    t.integer "tax_amount_cents"
+    t.integer "tax_amount_cents", default: 0
     t.integer "total_cents", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
@@ -98,6 +100,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_17_015819) do
     t.string "name", null: false
     t.decimal "pst_rate"
     t.datetime "updated_at", null: false
+    t.index ["abbreviation"], name: "index_provinces_on_abbreviation", unique: true
   end
 
   create_table "users", force: :cascade do |t|
