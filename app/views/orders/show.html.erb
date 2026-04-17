@@ -1,0 +1,16 @@
+<section class="section">
+  <div class="container">
+    <h1 class="title is-3">Order #<%= @order.id %></h1>
+
+    <div class="box">
+      <p><strong>Status:</strong> <%= @order.status.titleize %></p>
+      <p><strong>Subtotal:</strong> <%= number_to_currency((@order.total_cents.to_i - @order.tax_amount_cents.to_i).to_f / 100) %></p>
+      <p><strong>Tax:</strong> <%= number_to_currency(@order.tax_amount_cents.to_i.to_f / 100) %></p>
+      <p><strong>Total:</strong> <%= number_to_currency(@order.total_cents.to_f / 100) %></p>
+      <p><strong>Shipping Address:</strong> <%= @order.shipping_address.presence || "Not available" %></p>
+      <p><strong>Province:</strong> <%= @order.province_snapshot.presence || "Not available" %></p>
+    </div>
+
+    <%= link_to "Back to Orders", orders_path, class: "button is-light" %>
+  </div>
+</section>

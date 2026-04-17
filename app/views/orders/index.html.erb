@@ -1,0 +1,26 @@
+<section class="section">
+  <div class="container">
+    <h1 class="title is-3">My Orders</h1>
+
+    <% if @orders.any? %>
+      <div class="columns is-multiline">
+        <% @orders.each do |order| %>
+          <div class="column is-half">
+            <div class="box">
+              <p><strong>Order #:</strong> <%= order.id %></p>
+              <p><strong>Status:</strong> <%= order.status.titleize %></p>
+              <p><strong>Total:</strong> <%= number_to_currency(order.total_cents.to_f / 100) %></p>
+              <p><strong>Placed:</strong> <%= order.created_at.strftime("%b %-d, %Y") %></p>
+              <%= link_to "View Details", order_path(order), class: "button is-small is-link is-light mt-3" %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="notification is-light">
+        You have not placed any orders yet.
+      </div>
+      <%= link_to "Browse Products", products_path, class: "button is-link is-light" %>
+    <% end %>
+  </div>
+</section>
