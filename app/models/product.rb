@@ -11,9 +11,13 @@ class Product < ApplicationRecord
   validates :stock, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :perenual_id, numericality: { only_integer: true }, uniqueness: true, allow_nil: true
 
-  def display_name
-    return name if scientific_name.blank?
+  def display_common_name
+    name.to_s.titleize
+  end
 
-    "#{name} (#{scientific_name})"
+  def display_name
+    return display_common_name if scientific_name.blank?
+
+    "#{display_common_name} (#{scientific_name})"
   end
 end
