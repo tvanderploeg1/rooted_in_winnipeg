@@ -7,5 +7,5 @@ class User < ApplicationRecord
   belongs_to :province
   has_many :orders, dependent: :destroy
 
-  validates :full_name, :address, :city, :postal_code, :province,presence: true
+  validates :full_name, :address, :city, :postal_code, :province, presence: true
 end

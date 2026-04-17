@@ -1,5 +1,5 @@
 class ProductsController < ApplicationController
-  before_action :set_product, only: [:show]
+  before_action :set_product, only: [ :show ]
 
   def index
     @categories = Category.order(:name)
@@ -34,7 +34,7 @@ class ProductsController < ApplicationController
   def show
     @scientific_names = Product
       .where("LOWER(name) = ?", @product.name.downcase)
-      .where.not(scientific_name: [nil, ""])
+      .where.not(scientific_name: [ nil, "" ])
       .distinct
       .order(:scientific_name)
       .pluck(:scientific_name)

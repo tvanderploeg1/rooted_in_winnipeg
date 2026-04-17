@@ -21,41 +21,51 @@
       <%= link_to "Clear filters", products_path, class: "is-size-7" %>
     <% end %>
 
-    <div class="columns is-multiline">
-      <% @products.each do |product| %>
-        <div class="column is-12-mobile is-6-tablet is-4-desktop">
-          <div class="card is-fullheight">
-            <div class="card-image">
-              <figure class="image is-4by3">
-                <% if product.image.attached? %>
-                  <%= image_tag product.image, alt: product.display_name %>
-                <% else %>
-                  <div class="has-background-light has-text-grey p-4 has-text-centered">
-                    No image available
-                  </div>
-                <% end %>
-              </figure>
-            </div>
-            <div class="card-content">
-              <p class="title is-5 mb-2"><%= product.display_common_name %></p>
-              <p class="is-size-7 has-text-grey mb-2"><%= product.scientific_name %></p>
-              <p class="mb-2">
-                <strong>Category:</strong>
-                <%= link_to product.category.name, category_path(product.category) %>
-              </p>
-              <p class="mb-4">
-                <strong>Price:</strong>
-                <%= number_to_currency(product.price) %>
-              </p>
-              <%= link_to "View Details", product_path(product), class: "button is-link is-light is-fullwidth" %>
-            </div>
-          </div>
-        </div>
-      <% end %>
+    <div class="mt-4">
+      <%= paginate @products, params: request.query_parameters %>
     </div>
 
-    <div class="mt-5">
-      <%= paginate @products %>
+    <% if @products.any? %>
+      <div class="columns is-multiline">
+        <% @products.each do |product| %>
+          <div class="column is-12-mobile is-6-tablet is-4-desktop">
+            <div class="card is-fullheight">
+              <div class="card-image">
+                <figure class="image is-4by3">
+                  <% if product.image.attached? %>
+                    <%= image_tag product.image, alt: product.display_name %>
+                  <% else %>
+                    <div class="has-background-light has-text-grey p-4 has-text-centered">
+                      No image available
+                    </div>
+                  <% end %>
+                </figure>
+              </div>
+              <div class="card-content">
+                <p class="title is-5 mb-2"><%= product.display_common_name %></p>
+                <p class="is-size-7 has-text-grey mb-2"><%= product.scientific_name %></p>
+                <p class="mb-2">
+                  <strong>Category:</strong>
+                  <%= link_to product.category.name, category_path(product.category) %>
+                </p>
+                <p class="mb-4">
+                  <strong>Price:</strong>
+                  <%= number_to_currency(product.price) %>
+                </p>
+                <%= link_to "View Details", product_path(product), class: "button is-link is-light is-fullwidth" %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="notification is-light">
+        No products matched your filters. Try a different search or category.
+      </div>
+    <% end %>
+
+    <div class="mt-4">
+      <%= paginate @products, params: request.query_parameters %>
     </div>
   </div>
 </section>
