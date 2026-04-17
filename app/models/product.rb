@@ -9,5 +9,5 @@ class Product < ApplicationRecord
   validates :name, presence: true, uniqueness: true
   validates :price, presence: true, numericality: { greater_than: 0 }
   validates :stock, presence: true, numericality: { greater_than_or_equal_to: 0 }
-  validates :perenual_id, presence: true, numericality: { only_integer: true }, allow_nil: true
+  validates :perenual_id, numericality: { only_integer: true }, allow_nil: true
 end
