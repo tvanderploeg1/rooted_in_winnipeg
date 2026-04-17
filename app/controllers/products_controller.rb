@@ -2,9 +2,25 @@ class ProductsController < ApplicationController
   before_action :set_product, only: [:show]
 
   def index
-    grouped_products = Product
+    @categories = Category.order(:name)
+
+    scoped_products = Product
       .includes(:category, image_attachment: :blob)
       .order(:name, :id)
+
+    if params[:query].present?
+      query = "%#{params[:query].strip.downcase}%"
+      scoped_products = scoped_products.where(
+        "LOWER(name) LIKE ? OR LOWER(scientific_name) LIKE ? OR LOWER(description) LIKE ?",
+        query, query, query
+      )
+    end
+
+    if params[:category_id].present?
+      scoped_products = scoped_products.where(category_id: params[:category_id])
+    end
+
+    grouped_products = scoped_products
       .group_by { |product| product.name.to_s.downcase }
 
     @products = grouped_products.values.map do |variants|
@@ -12,6 +28,7 @@ class ProductsController < ApplicationController
     end
 
     @products = @products.sort_by { |product| product.display_common_name.downcase }
+    @products = Kaminari.paginate_array(@products).page(params[:page]).per(24)
   end
 
   def show

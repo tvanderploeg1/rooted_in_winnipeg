@@ -2,6 +2,24 @@
   <div class="container">
     <h1 class="title">Shop Plants</h1>
     <p class="subtitle">Browse all available plants in our collection.</p>
+    <p class="mb-4"><strong><%= pluralize(@products.total_count, "product") %></strong> found</p>
+
+    <%= form_with url: products_path, method: :get, local: true, class: "mb-5" do %>
+      <div class="columns is-multiline is-vcentered">
+        <div class="column is-12-mobile is-6-tablet">
+          <%= text_field_tag :query, params[:query], placeholder: "Search by common name, scientific name, or description", class: "input" %>
+        </div>
+        <div class="column is-12-mobile is-4-tablet">
+          <div class="select is-fullwidth">
+            <%= select_tag :category_id, options_for_select([["All categories", ""]] + @categories.map { |category| [category.name, category.id] }, params[:category_id]) %>
+          </div>
+        </div>
+        <div class="column is-12-mobile is-2-tablet">
+          <%= submit_tag "Apply", class: "button is-link is-fullwidth" %>
+        </div>
+      </div>
+      <%= link_to "Clear filters", products_path, class: "is-size-7" %>
+    <% end %>
 
     <div class="columns is-multiline">
       <% @products.each do |product| %>
@@ -34,6 +52,10 @@
           </div>
         </div>
       <% end %>
+    </div>
+
+    <div class="mt-5">
+      <%= paginate @products %>
     </div>
   </div>
 </section>
