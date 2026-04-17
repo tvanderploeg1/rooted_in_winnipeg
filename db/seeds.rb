@@ -1,5 +1,6 @@
 require "json"
 require "net/http"
+require "open-uri"
 require "uri"
 
 puts "== Rooted in Winnipeg seeds =="
@@ -40,6 +41,23 @@ CATEGORY_FILTERS = {
   "Herbs & Edibles" => { edible: 1 },
   "Tropicals" => { indoor: 1 }
 }.freeze
+
+def image_url_for(species_row)
+  image_data = species_row["default_image"] || {}
+  image_data["regular_url"] || image_data["original_url"] || image_data["medium_url"] || image_data["small_url"]
+end
+
+def attach_product_image(product, image_url)
+  return if image_url.blank? || product.image.attached?
+
+  image_io = URI.open(image_url)
+  filename = File.basename(URI.parse(image_url).path)
+  filename = "product-#{product.perenual_id || product.id}.jpg" if filename.blank?
+
+  product.image.attach(io: image_io, filename: filename)
+rescue StandardError => e
+  puts "Image attach skipped for #{product.name}: #{e.message}"
+end
 
 def seed_categories!
   CATEGORY_NAMES.each do |name|
@@ -110,21 +128,24 @@ def seed_products_from_perenual!
         end
         next if product.persisted? && product.perenual_id.present? && product.perenual_id != perenual_id
 
-        sunlight_value = Array(species_row["sunlight"]).join(", ").presence || filters[:sunlight].to_s.tr("_", " ")
-        watering_value = species_row["watering"].presence || filters[:watering].to_s.tr("_", " ")
+        raw_sunlight = Array(species_row["sunlight"]).join(", ")
+        raw_watering = species_row["watering"].to_s
+        sunlight_value = raw_sunlight.presence || "mixed light"
+        watering_value = raw_watering.presence || "average"
 
         product.name = name
         product.scientific_name = scientific_name
-        product.description = "Watering: #{watering_value.presence || "average"}. Sunlight: #{sunlight_value.presence || "mixed light"}."
-        product.watering = watering_value.presence || "average"
-        product.sunlight = sunlight_value.presence || "mixed light"
+        product.description = "Watering: #{watering_value}. Sunlight: #{sunlight_value}."
+        product.watering = watering_value
+        product.sunlight = sunlight_value
         product.poisonous_to_pets = species_row["poisonous_to_pets"] || false
         product.poisonous_to_humans = species_row["poisonous_to_humans"] || false
-        product.price ||= rand(8.99..89.99).round(2).to_d
-        product.stock ||= rand(5..50)
+        product.price ||= Faker::Commerce.price(range: 8.99..89.99).to_d
+        product.stock ||= Faker::Number.between(from: 5, to: 50)
         product.category = category
         product.perenual_id ||= perenual_id
         product.save!
+        attach_product_image(product, image_url_for(species_row))
 
         processed += 1
       end
