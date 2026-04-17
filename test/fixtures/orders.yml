@@ -2,9 +2,9 @@
 
 one:
   user: one
-  status: MyString
+  status: pending
   total_cents: 1
-  tax_amount: 1
+  tax_amount_cents: 1
   stripe_payment_id: MyString
   stripe_customer_id: MyString
   shipping_address: MyString
@@ -12,9 +12,9 @@ one:
 
 two:
   user: two
-  status: MyString
+  status: paid
   total_cents: 1
-  tax_amount: 1
+  tax_amount_cents: 1
   stripe_payment_id: MyString
   stripe_customer_id: MyString
   shipping_address: MyString

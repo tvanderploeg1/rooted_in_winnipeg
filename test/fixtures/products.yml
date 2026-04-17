@@ -1,11 +1,11 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  name: MyString
-  scientific_name: MyString
-  description: MyText
-  watering: MyString
-  sunlight: MyString
+  name: Monstera
+  scientific_name: Monstera deliciosa
+  description: Tropical plant for fixture tests.
+  watering: average
+  sunlight: bright indirect
   poisonous_to_pets: false
   poisonous_to_humans: false
   price: 9.99
@@ -14,14 +14,14 @@ one:
   category: one
 
 two:
-  name: MyString
-  scientific_name: MyString
-  description: MyText
-  watering: MyString
-  sunlight: MyString
+  name: Snake Plant
+  scientific_name: Dracaena trifasciata
+  description: Low light fixture product.
+  watering: minimum
+  sunlight: part shade
   poisonous_to_pets: false
   poisonous_to_humans: false
-  price: 9.99
-  stock: 1
-  perenual_id: 1
+  price: 14.99
+  stock: 2
+  perenual_id: 2
   category: two

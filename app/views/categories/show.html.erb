@@ -1,7 +1,7 @@
 <section class="section">
   <div class="container">
-    <h1 class="title">Shop Plants</h1>
-    <p class="subtitle">Browse all available plants in our collection.</p>
+    <h1 class="title"><%= @category.name %></h1>
+    <p class="subtitle">Plants in this category.</p>
 
     <div class="columns is-multiline">
       <% @products.each do |product| %>
@@ -20,20 +20,16 @@
             </div>
             <div class="card-content">
               <p class="title is-5 mb-2"><%= product.display_common_name %></p>
-              <p class="is-size-7 has-text-grey mb-2"><%= product.scientific_name %></p>
-              <p class="mb-2">
-                <strong>Category:</strong>
-                <%= link_to product.category.name, category_path(product.category) %>
-              </p>
-              <p class="mb-4">
-                <strong>Price:</strong>
-                <%= number_to_currency(product.price) %>
-              </p>
+              <p class="is-size-7 has-text-grey mb-4"><%= product.scientific_name %></p>
               <%= link_to "View Details", product_path(product), class: "button is-link is-light is-fullwidth" %>
             </div>
           </div>
         </div>
       <% end %>
+    </div>
+
+    <div class="mt-4">
+      <%= link_to "Back to all products", products_path, class: "button is-link is-light" %>
     </div>
   </div>
 </section>

@@ -19,7 +19,7 @@
 
         <p class="mb-2">
           <strong>Category:</strong>
-          <%= @product.category.name %>
+          <%= link_to @product.category.name, category_path(@product.category) %>
         </p>
         <p class="mb-2">
           <strong>Price:</strong>
