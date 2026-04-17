@@ -1,54 +1,86 @@
-<h2>Sign up</h2>
+<section class="section">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-half">
+        <div class="box">
+          <h2 class="title is-4">Create Your Account</h2>
 
-<%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
-  <%= render "devise/shared/error_messages", resource: resource %>
+          <%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
+            <%= render "devise/shared/error_messages", resource: resource %>
 
-  <div class="field">
-    <p><%= f.label :full_name %></p>
-    <p><%= f.text_field :full_name %></p>
+            <div class="field">
+              <%= f.label :full_name, class: "label" %>
+              <div class="control">
+                <%= f.text_field :full_name, class: "input" %>
+              </div>
+            </div>
+
+            <div class="field">
+              <%= f.label :address, class: "label" %>
+              <div class="control">
+                <%= f.text_field :address, class: "input" %>
+              </div>
+            </div>
+
+            <div class="field">
+              <%= f.label :city, class: "label" %>
+              <div class="control">
+                <%= f.text_field :city, class: "input" %>
+              </div>
+            </div>
+
+            <div class="field">
+              <%= f.label :postal_code, class: "label" %>
+              <div class="control">
+                <%= f.text_field :postal_code, class: "input" %>
+              </div>
+            </div>
+
+            <div class="field">
+              <%= f.label :province, class: "label" %>
+              <div class="control">
+                <div class="select is-fullwidth">
+                  <%= f.collection_select :province_id, Province.order(:name), :id, :name %>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <%= f.label :email, class: "label" %>
+              <div class="control">
+                <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "input" %>
+              </div>
+            </div>
+
+            <div class="field">
+              <%= f.label :password, class: "label" %>
+              <% if @minimum_password_length %>
+                <p class="help mb-2"><%= @minimum_password_length %> characters minimum</p>
+              <% end %>
+              <div class="control">
+                <%= f.password_field :password, autocomplete: "new-password", class: "input" %>
+              </div>
+            </div>
+
+            <div class="field">
+              <%= f.label :password_confirmation, class: "label" %>
+              <div class="control">
+                <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "input" %>
+              </div>
+            </div>
+
+            <div class="field mt-5">
+              <div class="control">
+                <%= f.submit "Sign up", class: "button is-link is-fullwidth" %>
+              </div>
+            </div>
+          <% end %>
+
+          <hr>
+
+          <%= render "devise/shared/links" %>
+        </div>
+      </div>
+    </div>
   </div>
-
-  <div class="field">
-    <p><%= f.label :address %></p>
-    <p><%= f.text_field :address %></p>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :city %></p>
-    <p><%= f.text_field :city %></p>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :postal_code %></p>
-    <p><%= f.text_field :postal_code %></p>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :province %></p>
-    <p><%= f.collection_select :province_id, Province.order(:name), :id, :name %></p>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :email %></p>
-    <p><%= f.email_field :email, autofocus: true, autocomplete: "email" %></p>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :password %></p>
-    <% if @minimum_password_length %>
-      <p><em>(<%= @minimum_password_length %> characters minimum)</em></p>
-    <% end %>
-    <p><%= f.password_field :password, autocomplete: "new-password" %></p>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :password_confirmation %></p>
-    <p><%= f.password_field :password_confirmation, autocomplete: "new-password" %></p>
-  </div>
-
-  <div class="actions">
-    <%= f.submit "Sign up" %>
-  </div>
-<% end %>
-
-<%= render "devise/shared/links" %>
+</section>

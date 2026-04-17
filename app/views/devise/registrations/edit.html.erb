@@ -1,65 +1,102 @@
-<h2>Edit <%= resource_name.to_s.humanize %></h2>
+<section class="section">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-half">
+        <div class="box">
+          <h2 class="title is-4">Edit Profile</h2>
 
-<%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
-  <%= render "devise/shared/error_messages", resource: resource %>
+          <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
+            <%= render "devise/shared/error_messages", resource: resource %>
 
-  <div class="field">
-    <p><%= f.label :full_name %></p>
-    <p><%= f.text_field :full_name %></p>
+            <div class="field">
+              <%= f.label :full_name, class: "label" %>
+              <div class="control">
+                <%= f.text_field :full_name, class: "input" %>
+              </div>
+            </div>
+
+            <div class="field">
+              <%= f.label :address, class: "label" %>
+              <div class="control">
+                <%= f.text_field :address, class: "input" %>
+              </div>
+            </div>
+
+            <div class="field">
+              <%= f.label :city, class: "label" %>
+              <div class="control">
+                <%= f.text_field :city, class: "input" %>
+              </div>
+            </div>
+
+            <div class="field">
+              <%= f.label :postal_code, class: "label" %>
+              <div class="control">
+                <%= f.text_field :postal_code, class: "input" %>
+              </div>
+            </div>
+
+            <div class="field">
+              <%= f.label :province, class: "label" %>
+              <div class="control">
+                <div class="select is-fullwidth">
+                  <%= f.collection_select :province_id, Province.order(:name), :id, :name %>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <%= f.label :email, class: "label" %>
+              <div class="control">
+                <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "input" %>
+              </div>
+            </div>
+
+            <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
+              <p class="help is-warning mb-3">Currently waiting confirmation for: <%= resource.unconfirmed_email %></p>
+            <% end %>
+
+            <div class="field">
+              <%= f.label :password, class: "label" %>
+              <p class="help mb-2">Leave blank if you do not want to change it.</p>
+              <div class="control">
+                <%= f.password_field :password, autocomplete: "new-password", class: "input" %>
+              </div>
+              <% if @minimum_password_length %>
+                <p class="help"><%= @minimum_password_length %> characters minimum</p>
+              <% end %>
+            </div>
+
+            <div class="field">
+              <%= f.label :password_confirmation, class: "label" %>
+              <div class="control">
+                <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "input" %>
+              </div>
+            </div>
+
+            <div class="field">
+              <%= f.label :current_password, class: "label" %>
+              <p class="help mb-2">Enter your current password to save changes.</p>
+              <div class="control">
+                <%= f.password_field :current_password, autocomplete: "current-password", class: "input" %>
+              </div>
+            </div>
+
+            <div class="field mt-5">
+              <div class="control">
+                <%= f.submit "Update Profile", class: "button is-link is-fullwidth" %>
+              </div>
+            </div>
+          <% end %>
+
+          <hr>
+
+          <div class="is-flex is-justify-content-space-between is-align-items-center">
+            <%= link_to "Back to Account", account_path, class: "button is-light" %>
+            <%= button_to "Cancel my account", registration_path(resource_name), data: { confirm: "Are you sure?", turbo_confirm: "Are you sure?" }, method: :delete, class: "button is-danger is-light" %>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-
-  <div class="field">
-    <p><%= f.label :address %></p>
-    <p><%= f.text_field :address %></p>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :city %></p>
-    <p><%= f.text_field :city %></p>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :postal_code %></p>
-    <p><%= f.text_field :postal_code %></p>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :province %></p>
-    <p><%= f.collection_select :province_id, Province.order(:name), :id, :name %></p>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :email %></p>
-    <p><%= f.email_field :email, autofocus: true, autocomplete: "email" %></p>
-  </div>
-
-  <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
-    <div>Currently waiting confirmation for: <%= resource.unconfirmed_email %></div>
-  <% end %>
-
-  <div class="field">
-    <p><%= f.label :password %> <i>(leave blank if you don't want to change it)</i></p>
-    <p><%= f.password_field :password, autocomplete: "new-password" %></p>
-    <% if @minimum_password_length %>
-      <p><em><%= @minimum_password_length %> characters minimum</em></p>
-    <% end %>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :password_confirmation %></p>
-    <p><%= f.password_field :password_confirmation, autocomplete: "new-password" %></p>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :current_password %> <i>(we need your current password to confirm your changes)</i></p>
-    <p><%= f.password_field :current_password, autocomplete: "current-password" %></p>
-  </div>
-
-  <div class="actions">
-    <%= f.submit "Update" %>
-  </div>
-<% end %>
-
-<div>Unhappy? <%= button_to "Cancel my account", registration_path(resource_name), data: { confirm: "Are you sure?", turbo_confirm: "Are you sure?" }, method: :delete %></div>
-
-<%= link_to "Back", :back %>
+</section>

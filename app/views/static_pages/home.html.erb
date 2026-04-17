@@ -1,36 +1,63 @@
 <section class="hero is-success is-small">
   <div class="hero-body">
     <div class="container">
-      <h1 class="title">Rooted in Winnipeg</h1>
-      <p class="subtitle">Local and climate-appropriate plants for Winnipeg homes and gardens.</p>
-      <div class="buttons mt-4">
-        <%= link_to "Browse Products", "#", class: "button is-light" %>
-        <%= link_to "About This Project", about_path, class: "button is-outlined is-light" %>
+      <div class="columns is-vcentered">
+        <div class="column is-two-thirds">
+          <h1 class="title">Rooted in Winnipeg</h1>
+          <p class="subtitle">A plant storefront project with real product data and full ecommerce flow.</p>
+          <div class="buttons mt-4">
+            <%= link_to "Browse Products", products_path, class: "button is-light" %>
+            <%= link_to "About This Project", about_path, class: "button is-outlined is-light" %>
+          </div>
+        </div>
+        <div class="column is-one-third has-text-right">
+          <%= image_tag "riw_logo.png", alt: "Rooted in Winnipeg Logo", style: "max-height: 140px; width: auto;" %>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section">
+<section class="section pt-5">
   <div class="container">
-    <div class="columns">
-      <div class="column">
-        <div class="box">
-          <h2 class="title is-5">Local Focus</h2>
-          <p>Plant selections suited for Manitoba growing conditions.</p>
+    <h2 class="title is-4">Featured Products</h2>
+    <div class="columns is-multiline">
+      <% if @featured_products.any? %>
+        <% @featured_products.each do |product| %>
+          <div class="column is-one-third">
+            <div class="box">
+              <h3 class="title is-6 mb-2"><%= product.display_common_name %></h3>
+              <p class="is-size-7 has-text-grey mb-2"><%= product.category.name %></p>
+              <p class="mb-4"><strong><%= number_to_currency(product.price) %></strong></p>
+              <%= link_to "View Product", product_path(product), class: "button is-small is-link is-light" %>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="column">
+          <div class="notification is-light">
+            Products will appear here once seed data is loaded.
+          </div>
         </div>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<section class="section py-5 has-background-light">
+  <div class="container">
+    <div class="columns is-variable is-6">
+      <div class="column">
+        <h2 class="title is-6 mb-2">Curated Catalog</h2>
+        <p class="is-size-7">Browse a structured catalog across clear plant categories.</p>
       </div>
       <div class="column">
-        <div class="box">
-          <h2 class="title is-5">Real Product Data</h2>
-          <p>Seeded from real-world plant information for realistic browsing.</p>
-        </div>
+        <h2 class="title is-6 mb-2">Real Product Data</h2>
+        <p class="is-size-7">Seeded from real-world plant information for realistic browsing.</p>
       </div>
       <div class="column">
-        <div class="box">
-          <h2 class="title is-5">Secure Checkout</h2>
-          <p>Customer login, cart, and payment flow built with Rails conventions.</p>
-        </div>
+        <h2 class="title is-6 mb-2">Secure Checkout</h2>
+        <p class="is-size-7">Customer login, cart, and payment flow built with Rails conventions.</p>
       </div>
     </div>
   </div>

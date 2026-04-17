@@ -1,0 +1,31 @@
+<section class="section">
+  <div class="container">
+    <h1 class="title is-3">My Account</h1>
+
+    <% if @missing_profile_fields.empty? %>
+      <article class="message is-success">
+        <div class="message-body">
+          Profile status: Complete
+        </div>
+      </article>
+    <% else %>
+      <article class="message is-warning">
+        <div class="message-body">
+          Profile status: Incomplete<br>
+          Missing: <%= @missing_profile_fields.join(", ") %>
+        </div>
+      </article>
+    <% end %>
+
+    <div class="box">
+      <p><strong>Full name:</strong> <%= current_user.full_name.presence || "Not set" %></p>
+      <p><strong>Email:</strong> <%= current_user.email %></p>
+      <p><strong>Address:</strong> <%= current_user.address.presence || "Not set" %></p>
+      <p><strong>City:</strong> <%= current_user.city.presence || "Not set" %></p>
+      <p><strong>Postal code:</strong> <%= current_user.postal_code.presence || "Not set" %></p>
+      <p><strong>Province:</strong> <%= current_user.province&.name || "Not set" %></p>
+    </div>
+
+    <%= link_to "Edit Profile", edit_user_registration_path, class: "button is-link" %>
+  </div>
+</section>
