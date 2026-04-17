@@ -29,9 +29,9 @@ PROVINCE_ROWS = [
 ].freeze
 
 PERENUAL_BASE_URL = "https://perenual.com/api/v2/species-list"
-SEED_TARGET_PRODUCTS = 150
+SEED_TARGET_PRODUCTS = 500
 PER_PAGE = 30
-MAX_PAGES = 2
+MAX_PAGES = 10
 
 CATEGORY_FILTERS = {
   "Succulents & Cacti" => { sunlight: "full_sun", watering: "minimum" },
