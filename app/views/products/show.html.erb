@@ -1,0 +1,69 @@
+<section class="section">
+  <div class="container">
+    <div class="columns is-variable is-6">
+      <div class="column is-12-mobile is-6-tablet">
+        <% if @product.image.attached? %>
+          <figure class="image is-4by3">
+            <%= image_tag @product.image, alt: @product.display_name %>
+          </figure>
+        <% else %>
+          <div class="notification is-light">
+            No image available for this product yet.
+          </div>
+        <% end %>
+      </div>
+
+      <div class="column is-12-mobile is-6-tablet">
+        <h1 class="title"><%= @product.display_common_name %></h1>
+        <p class="subtitle is-5"><%= @product.scientific_name %></p>
+
+        <p class="mb-2">
+          <strong>Category:</strong>
+          <%= @product.category.name %>
+        </p>
+        <p class="mb-2">
+          <strong>Price:</strong>
+          <%= number_to_currency(@product.price) %>
+        </p>
+        <p class="mb-2">
+          <strong>Stock:</strong>
+          <%= @product.stock %>
+        </p>
+        <p class="mb-2">
+          <strong>Watering:</strong>
+          <%= @product.watering.presence || "Not specified" %>
+        </p>
+        <p class="mb-2">
+          <strong>Sunlight:</strong>
+          <%= @product.sunlight.presence || "Not specified" %>
+        </p>
+        <p class="mb-2">
+          <strong>Pet toxicity:</strong>
+          <%= @product.poisonous_to_pets ? "Potentially toxic" : "Not listed as toxic" %>
+        </p>
+        <p class="mb-2">
+          <strong>Human toxicity:</strong>
+          <%= @product.poisonous_to_humans ? "Potentially toxic" : "Not listed as toxic" %>
+        </p>
+
+        <% if @scientific_names.any? %>
+          <div class="mt-4">
+            <h2 class="title is-6 mb-2">Scientific Names</h2>
+            <ul>
+              <% @scientific_names.each do |scientific_name| %>
+                <li><%= scientific_name %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="content mt-5">
+      <h2 class="title is-5">Description</h2>
+      <p><%= @product.description.presence || "No description available yet." %></p>
+    </div>
+
+    <%= link_to "Back to all products", products_path, class: "button is-link is-light mt-4" %>
+  </div>
+</section>
