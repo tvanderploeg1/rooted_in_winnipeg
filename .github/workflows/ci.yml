@@ -96,10 +96,17 @@ jobs:
         with:
           bundler-cache: true
 
+      - name: Create test database
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'rooted_in_winnipeg_test'" | grep -q 1 || \
+          psql -h localhost -U postgres -c "CREATE DATABASE rooted_in_winnipeg_test;"
+
       - name: Run tests
         env:
           RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/rooted_in_winnipeg_test
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test
@@ -135,10 +142,17 @@ jobs:
         with:
           bundler-cache: true
 
+      - name: Create test database
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'rooted_in_winnipeg_test'" | grep -q 1 || \
+          psql -h localhost -U postgres -c "CREATE DATABASE rooted_in_winnipeg_test;"
+
       - name: Run System Tests
         env:
           RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/rooted_in_winnipeg_test
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test:system
