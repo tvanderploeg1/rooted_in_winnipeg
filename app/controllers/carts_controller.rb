@@ -9,6 +9,8 @@ class CartsController < ApplicationController
       next if product.blank?
 
       quantity = quantity.to_i
+      next if quantity <= 0
+
       line_total = product.price * quantity
 
       @cart_items << { product: product, quantity: quantity, line_total: line_total }

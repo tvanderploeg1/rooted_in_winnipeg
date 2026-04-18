@@ -1,0 +1,45 @@
+<section class="section">
+  <div class="container">
+    <h1 class="title is-3">Checkout Review</h1>
+
+    <div class="table-container">
+      <table class="table is-fullwidth is-striped">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Unit Price</th>
+            <th>Quantity</th>
+            <th>Line Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @checkout_items.each do |item| %>
+            <tr>
+              <td><%= link_to item[:product].display_common_name, product_path(item[:product]) %></td>
+              <td><%= number_to_currency(item[:unit_price_cents] / 100.0) %></td>
+              <td><%= item[:quantity] %></td>
+              <td><%= number_to_currency(item[:line_total_cents] / 100.0) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="box">
+      <p><strong>Subtotal:</strong> <%= number_to_currency(@subtotal_cents / 100.0) %></p>
+      <p><strong>Tax (<%= number_to_percentage(@tax_rate * 100, precision: 2) %>):</strong> <%= number_to_currency(@tax_cents / 100.0) %></p>
+      <p class="title is-5 mt-3"><strong>Total:</strong> <%= number_to_currency(@total_cents / 100.0) %></p>
+    </div>
+
+    <div class="box">
+      <h2 class="title is-5">Shipping Snapshot</h2>
+      <p><strong>Address:</strong> <%= @shipping_address_snapshot %></p>
+      <p><strong>Province:</strong> <%= @province_snapshot %></p>
+    </div>
+
+    <div class="buttons">
+      <%= link_to "Back to Cart", cart_path, class: "button is-light" %>
+      <button class="button is-link" disabled>Place Order (Coming in Chunk 3)</button>
+    </div>
+  </div>
+</section>
