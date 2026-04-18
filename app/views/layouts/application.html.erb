@@ -42,17 +42,29 @@
 
         <div class="navbar-end">
           <% if user_signed_in? %>
+            <%= link_to "Cart", cart_path, class: "navbar-item" %>
             <%= link_to "Account", account_path, class: "navbar-item" %>
             <%= link_to "My Orders", orders_path, class: "navbar-item" %>
             <%= link_to "Edit Profile", edit_user_registration_path, class: "navbar-item" %>
             <%= link_to "Logout", destroy_user_session_path, data: { turbo_method: :delete }, class: "navbar-item" %>
           <% else %>
+            <%= link_to "Cart", cart_path, class: "navbar-item" %>
             <%= link_to "Login", new_user_session_path, class: "navbar-item" %>
             <%= link_to "Sign up", new_user_registration_path, class: "navbar-item" %>
           <% end %>
         </div>
       </div>
     </nav>
+    <section class="section pt-4 pb-0">
+      <div class="container">
+        <% if notice.present? %>
+          <div class="notification is-success is-light"><%= notice %></div>
+        <% end %>
+        <% if alert.present? %>
+          <div class="notification is-danger is-light"><%= alert %></div>
+        <% end %>
+      </div>
+    </section>
     <%= yield %>
     </body>
   </html>

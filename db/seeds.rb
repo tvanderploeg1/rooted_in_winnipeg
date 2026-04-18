@@ -138,8 +138,6 @@ def seed_products_from_perenual!
         product.description = "Watering: #{watering_value}. Sunlight: #{sunlight_value}."
         product.watering = watering_value
         product.sunlight = sunlight_value
-        product.poisonous_to_pets = species_row["poisonous_to_pets"] || false
-        product.poisonous_to_humans = species_row["poisonous_to_humans"] || false
         product.price ||= Faker::Commerce.price(range: 8.99..89.99).to_d
         product.stock ||= Faker::Number.between(from: 5, to: 50)
         product.category = category

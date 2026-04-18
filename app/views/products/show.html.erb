@@ -37,14 +37,6 @@
           <strong>Sunlight:</strong>
           <%= @product.sunlight.presence || "Not specified" %>
         </p>
-        <p class="mb-2">
-          <strong>Pet toxicity:</strong>
-          <%= @product.poisonous_to_pets ? "Potentially toxic" : "Not listed as toxic" %>
-        </p>
-        <p class="mb-2">
-          <strong>Human toxicity:</strong>
-          <%= @product.poisonous_to_humans ? "Potentially toxic" : "Not listed as toxic" %>
-        </p>
 
         <% if @scientific_names.any? %>
           <div class="mt-4">
@@ -56,6 +48,10 @@
             </ul>
           </div>
         <% end %>
+
+        <div class="mt-5">
+          <%= button_to "Add to Cart", cart_items_path(product_id: @product.id), method: :post, class: "button is-link" %>
+        </div>
       </div>
     </div>
 
