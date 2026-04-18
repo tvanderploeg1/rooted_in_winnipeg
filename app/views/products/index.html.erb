@@ -21,7 +21,7 @@
       <%= link_to "Clear filters", products_path, class: "is-size-7" %>
     <% end %>
 
-    <div class="mt-4">
+    <div class="mt-4 mb-5">
       <%= paginate @products, params: request.query_parameters %>
     </div>
 

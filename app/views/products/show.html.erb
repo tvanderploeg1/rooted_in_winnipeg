@@ -37,6 +37,14 @@
           <strong>Sunlight:</strong>
           <%= @product.sunlight.presence || "Not specified" %>
         </p>
+        <p class="mb-2">
+          <strong>Family:</strong>
+          <%= @product.family.presence || "Not specified" %>
+        </p>
+        <p class="mb-2">
+          <strong>Genus:</strong>
+          <%= @product.genus.presence || "Not specified" %>
+        </p>
 
         <% if @scientific_names.any? %>
           <div class="mt-4">
@@ -53,11 +61,6 @@
           <%= button_to "Add to Cart", cart_items_path(product_id: @product.id), method: :post, class: "button is-link" %>
         </div>
       </div>
-    </div>
-
-    <div class="content mt-5">
-      <h2 class="title is-5">Description</h2>
-      <p><%= @product.description.presence || "No description available yet." %></p>
     </div>
 
     <%= link_to "Back to all products", products_path, class: "button is-link is-light mt-4" %>
