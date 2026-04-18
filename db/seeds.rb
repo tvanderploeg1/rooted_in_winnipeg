@@ -1,5 +1,4 @@
 require "json"
-require "net/http"
 require "open-uri"
 require "uri"
 
@@ -29,18 +28,9 @@ PROVINCE_ROWS = [
   { name: "Yukon", abbreviation: "YT", gst_rate: 0.05, pst_rate: 0.0, hst_rate: 0.0 }
 ].freeze
 
-PERENUAL_BASE_URL = "https://perenual.com/api/v2/species-list"
-SEED_TARGET_PRODUCTS = 500
-PER_PAGE = 30
-MAX_PAGES = 10
-
-CATEGORY_FILTERS = {
-  "Succulents & Cacti" => { sunlight: "full_sun", watering: "minimum" },
-  "Low Light" => { sunlight: "part_shade" },
-  "Outdoor Seasonal" => { cycle: "annual" },
-  "Herbs & Edibles" => { edible: 1 },
-  "Tropicals" => { indoor: 1 }
-}.freeze
+SEED_TARGET_PRODUCTS = 3000
+CACHE_FILE_PATH = Rails.root.join("db", "seeds", "perenual_species_cache.json")
+SEED_ATTACH_IMAGES = ENV.fetch("SEED_ATTACH_IMAGES", "false") == "true"
 
 def image_url_for(species_row)
   image_data = species_row["default_image"] || {}
@@ -48,6 +38,14 @@ def image_url_for(species_row)
 end
 
 def attach_product_image(product, image_url)
+  unless SEED_ATTACH_IMAGES
+    unless defined?(@seed_image_attach_notice_printed) && @seed_image_attach_notice_printed
+      puts "Image attachment disabled (set SEED_ATTACH_IMAGES=true to enable)."
+      @seed_image_attach_notice_printed = true
+    end
+    return
+  end
+
   return if image_url.blank? || product.image.attached?
 
   image_io = URI.open(image_url)
@@ -76,84 +74,74 @@ def seed_provinces!
   puts "Seeded provinces/territories: #{Province.count}"
 end
 
-def fetch_perenual_page(page, api_key, filters = {})
-  params = { key: api_key, page: page, per_page: PER_PAGE }.merge(filters)
-  uri = URI.parse(PERENUAL_BASE_URL)
-  uri.query = URI.encode_www_form(params)
-  response = Net::HTTP.get_response(uri)
-  unless response.is_a?(Net::HTTPSuccess)
-    puts "Skipped page #{page}: HTTP #{response.code}"
-    return {}
+def load_cache_file
+  unless File.exist?(CACHE_FILE_PATH)
+    puts "Cache file not found: #{CACHE_FILE_PATH}"
+    return []
   end
-
-  JSON.parse(response.body)
+  payload = JSON.parse(File.read(CACHE_FILE_PATH))
+  rows = payload["rows"] || []
+  puts "Loaded cache file: #{CACHE_FILE_PATH} (rows: #{rows.size})"
+  rows
 rescue StandardError => e
-  puts "Skipped page #{page}: #{e.message}"
-  {}
+  puts "Cache read failed: #{e.message}"
+  []
 end
 
 def seed_products_from_perenual!
-  api_key = ENV["PERENUAL_API_KEY"]
-  if api_key.blank?
-    puts "PERENUAL_API_KEY not set. Skipping API product seed."
+  rows_for_seed = load_cache_file
+  if rows_for_seed.empty?
+    puts "No cached rows available. Skipping product seed."
     return
   end
 
   processed = 0
 
-  CATEGORY_FILTERS.each do |category_name, filters|
-    break if Product.count >= SEED_TARGET_PRODUCTS
-
+  rows_for_seed.each do |species_row|
+    category_name = species_row["_seed_category"] || "Tropicals"
     category = Category.find_by!(name: category_name)
-    page = 1
 
-    while Product.count < SEED_TARGET_PRODUCTS && page <= MAX_PAGES
-      payload = fetch_perenual_page(page, api_key, filters)
-      rows = payload["data"] || []
-      break if rows.empty?
+    perenual_id = species_row["id"]
+    next if perenual_id.blank?
 
-      rows.each do |species_row|
-        break if Product.count >= SEED_TARGET_PRODUCTS
+    scientific_name = Array(species_row["scientific_name"]).first
+    name = species_row["common_name"].presence || scientific_name
+    next if name.blank?
 
-        perenual_id = species_row["id"]
-        next if perenual_id.blank?
-
-        scientific_name = Array(species_row["scientific_name"]).first
-        name = species_row["common_name"].presence || scientific_name
-        next if name.blank?
-
-        product = Product.find_or_initialize_by(perenual_id: perenual_id)
-        if product.new_record?
-          product = Product.find_or_initialize_by(name: name, scientific_name: scientific_name)
-        end
-        next if product.persisted? && product.perenual_id.present? && product.perenual_id != perenual_id
-
-        raw_sunlight = Array(species_row["sunlight"]).join(", ")
-        raw_watering = species_row["watering"].to_s
-        sunlight_value = raw_sunlight.presence || "mixed light"
-        watering_value = raw_watering.presence || "average"
-
-        product.name = name
-        product.scientific_name = scientific_name
-        product.description = "Watering: #{watering_value}. Sunlight: #{sunlight_value}."
-        product.watering = watering_value
-        product.sunlight = sunlight_value
-        product.price ||= Faker::Commerce.price(range: 8.99..89.99).to_d
-        product.stock ||= Faker::Number.between(from: 5, to: 50)
-        product.category = category
-        product.perenual_id ||= perenual_id
-        product.save!
-        attach_product_image(product, image_url_for(species_row))
-
-        processed += 1
-      end
-
-      puts "Processed #{category_name} page #{page} (products total: #{Product.count})"
-      page += 1
+    product = Product.find_or_initialize_by(perenual_id: perenual_id)
+    if product.new_record?
+      product = Product.find_or_initialize_by(name: name, scientific_name: scientific_name)
+      next if product.new_record? && Product.count >= SEED_TARGET_PRODUCTS
     end
+    next if product.persisted? && product.perenual_id.present? && product.perenual_id != perenual_id
+
+    raw_sunlight = Array(species_row["sunlight"]).join(", ")
+    raw_watering = species_row["watering"].to_s
+    raw_family = species_row["family"].to_s
+    raw_genus = species_row["genus"].to_s
+    sunlight_value = raw_sunlight.presence || "mixed light"
+    watering_value = raw_watering.presence || "average"
+    family_value = raw_family.presence || "Not specified"
+    genus_value = raw_genus.presence || "Not specified"
+
+    product.name = name
+    product.scientific_name = scientific_name
+    product.description = nil
+    product.watering = watering_value
+    product.sunlight = sunlight_value
+    product.family = family_value
+    product.genus = genus_value
+    product.price ||= Faker::Commerce.price(range: 8.99..89.99).to_d
+    product.stock ||= Faker::Number.between(from: 5, to: 50)
+    product.category = category
+    product.perenual_id ||= perenual_id
+    product.save!
+    attach_product_image(product, image_url_for(species_row))
+
+    processed += 1
   end
 
-  puts "Perenual rows processed: #{processed}"
+  puts "Perenual rows processed from cache: #{processed}"
   puts "Products now in database: #{Product.count}"
 end
 

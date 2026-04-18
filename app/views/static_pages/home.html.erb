@@ -26,6 +26,11 @@
         <% @featured_products.each do |product| %>
           <div class="column is-one-third">
             <div class="box">
+              <% if product.image.attached? %>
+                <figure class="image is-4by3 mb-3">
+                  <%= image_tag product.image, alt: product.display_name, class: "is-rounded" %>
+                </figure>
+              <% end %>
               <h3 class="title is-6 mb-2"><%= product.display_common_name %></h3>
               <p class="is-size-7 has-text-grey mb-2"><%= product.category.name %></p>
               <p class="mb-4"><strong><%= number_to_currency(product.price) %></strong></p>
