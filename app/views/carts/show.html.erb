@@ -23,12 +23,13 @@
                   <%= form_with url: cart_item_path(item[:product]), method: :patch, local: true, class: "is-flex is-align-items-center" do |form| %>
                     <div class="field has-addons mb-0">
                       <div class="control">
-                        <%= form.number_field :quantity, value: item[:quantity], min: 1, class: "input is-small", style: "width: 5rem;" %>
+                        <%= form.number_field :quantity, value: item[:quantity], min: 1, max: item[:product].stock, class: "input is-small", style: "width: 5rem;" %>
                       </div>
                       <div class="control">
                         <%= form.submit "Update", class: "button is-small is-info is-light" %>
                       </div>
                     </div>
+                    <p class="help">In stock: <%= item[:product].stock %></p>
                   <% end %>
                 </td>
                 <td><%= number_to_currency(item[:line_total]) %></td>

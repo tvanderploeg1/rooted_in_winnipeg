@@ -3,36 +3,44 @@ class OrdersController < ApplicationController
   before_action :set_order, only: :show
 
   def new
-    if cart_hash.blank?
-      redirect_to cart_path, alert: "Your cart is empty."
+    return unless prepare_checkout
+  end
+
+  def create
+    return unless prepare_checkout
+
+    unavailable_item = @checkout_items.find { |item| item[:quantity] > item[:product].stock.to_i }
+    if unavailable_item.present?
+      redirect_to cart_path, alert: "Not enough stock for #{unavailable_item[:product].display_common_name}."
       return
     end
 
-    missing_fields = required_profile_fields.select { |field| current_user.public_send(field).blank? }
-    if missing_fields.any?
-      redirect_to account_path, alert: "Please complete your profile before checkout."
-      return
+    order = nil
+
+    ActiveRecord::Base.transaction do
+      order = current_user.orders.create!(
+        status: "pending",
+        total_cents: @total_cents,
+        tax_amount_cents: @tax_cents,
+        shipping_address: shipping_address_snapshot,
+        province_snapshot: province_snapshot
+      )
+
+      @checkout_items.each do |item|
+        order.order_items.create!(
+          product: item[:product],
+          quantity: item[:quantity],
+          unit_price_cents: item[:unit_price_cents]
+        )
+
+        item[:product].update!(stock: item[:product].stock - item[:quantity])
+      end
     end
 
-    @checkout_items = build_checkout_items
-    if @checkout_items.empty?
-      redirect_to cart_path, alert: "Your cart is empty."
-      return
-    end
-
-    @subtotal_cents = @checkout_items.sum { |item| item[:line_total_cents] }
-
-    province = current_user.province
-    gst_rate = province&.gst_rate.to_d
-    pst_rate = province&.pst_rate.to_d
-    hst_rate = province&.hst_rate.to_d
-    @tax_rate = gst_rate + pst_rate + hst_rate
-
-    @tax_cents = (@subtotal_cents * @tax_rate).round
-    @total_cents = @subtotal_cents + @tax_cents
-
-    @shipping_address_snapshot = "#{current_user.address}, #{current_user.city}, #{current_user.postal_code}"
-    @province_snapshot = province&.name
+    session[:cart] = {}
+    redirect_to order_path(order), notice: "Order created successfully."
+  rescue ActiveRecord::RecordInvalid
+    redirect_to checkout_path, alert: "Could not place order. Please try again."
   end
 
   def index
@@ -72,11 +80,38 @@ class OrdersController < ApplicationController
     items
   end
 
-  def required_profile_fields
-    [ :full_name, :address, :city, :postal_code, :province ]
+  def prepare_checkout
+    @checkout_items = build_checkout_items
+    if @checkout_items.empty?
+      redirect_to cart_path, alert: "Your cart is empty."
+      return false
+    end
+
+    @subtotal_cents = @checkout_items.sum { |item| item[:line_total_cents] }
+
+    province = current_user.province
+    gst_rate = province&.gst_rate.to_d
+    pst_rate = province&.pst_rate.to_d
+    hst_rate = province&.hst_rate.to_d
+
+    @tax_rate = gst_rate + pst_rate + hst_rate
+    @tax_cents = (@subtotal_cents * @tax_rate).round
+    @total_cents = @subtotal_cents + @tax_cents
+
+    @shipping_address_snapshot = shipping_address_snapshot
+    @province_snapshot = province_snapshot
+    true
+  end
+
+  def shipping_address_snapshot
+    "#{current_user.address}, #{current_user.city}, #{current_user.postal_code}"
+  end
+
+  def province_snapshot
+    current_user.province&.name
   end
 
   def set_order
-    @order = current_user.orders.find(params[:id])
+    @order = current_user.orders.includes(order_items: :product).find(params[:id])
   end
 end

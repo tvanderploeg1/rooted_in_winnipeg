@@ -11,6 +11,33 @@
       <p><strong>Province:</strong> <%= @order.province_snapshot.presence || "Not available" %></p>
     </div>
 
+    <div class="box">
+      <h2 class="title is-5">Order Items</h2>
+
+      <div class="table-container">
+        <table class="table is-fullwidth is-striped">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Quantity</th>
+              <th>Unit Price</th>
+              <th>Line Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @order.order_items.each do |item| %>
+              <tr>
+                <td><%= item.product.display_common_name %></td>
+                <td><%= item.quantity %></td>
+                <td><%= number_to_currency(item.unit_price_cents.to_f / 100) %></td>
+                <td><%= number_to_currency((item.unit_price_cents * item.quantity).to_f / 100) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <%= link_to "Back to Orders", orders_path, class: "button is-light" %>
   </div>
 </section>

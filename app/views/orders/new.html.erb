@@ -39,7 +39,7 @@
 
     <div class="buttons">
       <%= link_to "Back to Cart", cart_path, class: "button is-light" %>
-      <button class="button is-link" disabled>Place Order (Coming in Chunk 3)</button>
+      <%= button_to "Place Order", orders_path, method: :post, class: "button is-link" %>
     </div>
   </div>
 </section>

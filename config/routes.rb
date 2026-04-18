@@ -5,7 +5,7 @@ Rails.application.routes.draw do
 
   resources :products, only: [ :index, :show ]
   resources :categories, only: [ :show ]
-  resources :orders, only: [ :index, :show, :new ]
+  resources :orders, only: [ :index, :show, :new, :create ]
   resource :cart, only: [ :show ]
   resources :cart_items, only: [ :create, :destroy, :update ]
   get "checkout", to: "orders#new", as: :checkout
