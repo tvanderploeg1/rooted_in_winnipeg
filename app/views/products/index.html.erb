@@ -4,6 +4,18 @@
     <p class="subtitle">Browse all available plants in our collection.</p>
     <p class="mb-4"><strong><%= pluralize(@products.total_count, "product") %></strong> found</p>
 
+    <div class="box mb-5">
+      <h2 class="title is-6 mb-3">Browse by Category</h2>
+      <div class="buttons are-small">
+        <% @categories.each do |category| %>
+          <%= link_to category.name, category_path(category), class: "button is-light" %>
+        <% end %>
+      </div>
+      <p class="is-size-7 has-text-grey mt-2">
+        Category browsing is separate from keyword search/filter below.
+      </p>
+    </div>
+
     <%= form_with url: products_path, method: :get, local: true, class: "mb-5" do %>
       <div class="columns is-multiline is-vcentered">
         <div class="column is-12-mobile is-6-tablet">

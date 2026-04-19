@@ -2,44 +2,84 @@
   <div class="container">
     <h1 class="title is-3">Checkout Review</h1>
 
-    <div class="table-container">
-      <table class="table is-fullwidth is-striped">
-        <thead>
-          <tr>
-            <th>Product</th>
-            <th>Unit Price</th>
-            <th>Quantity</th>
-            <th>Line Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @checkout_items.each do |item| %>
+    <%= form_with url: orders_path, method: :post, local: true, data: { turbo: false } do %>
+      <div class="box">
+        <h2 class="title is-5">Shipping Details</h2>
+        <p class="is-size-7 has-text-grey mb-3">
+          You can edit your shipping address here before placing the order.
+        </p>
+
+        <div class="columns is-multiline">
+          <div class="column is-12">
+            <label class="label">Address</label>
+            <%= text_field_tag "checkout[address]", @checkout_profile[:address], class: "input", required: true %>
+          </div>
+
+          <div class="column is-6">
+            <label class="label">City</label>
+            <%= text_field_tag "checkout[city]", @checkout_profile[:city], class: "input", required: true %>
+          </div>
+
+          <div class="column is-6">
+            <label class="label">Postal Code</label>
+            <%= text_field_tag "checkout[postal_code]", @checkout_profile[:postal_code], class: "input", required: true %>
+          </div>
+
+          <div class="column is-12">
+            <label class="label">Province</label>
+            <div class="select is-fullwidth">
+              <%= select_tag "checkout[province_id]",
+                  options_for_select(@province_options.map { |province| [province.name, province.id] }, @checkout_profile[:province_id]),
+                  include_blank: "Select a province",
+                  required: true %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="table is-fullwidth is-striped">
+          <thead>
             <tr>
-              <td><%= link_to item[:product].display_common_name, product_path(item[:product]) %></td>
-              <td><%= number_to_currency(item[:unit_price_cents] / 100.0) %></td>
-              <td><%= item[:quantity] %></td>
-              <td><%= number_to_currency(item[:line_total_cents] / 100.0) %></td>
+              <th>Product</th>
+              <th>Unit Price</th>
+              <th>Quantity</th>
+              <th>Line Total</th>
             </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            <% @checkout_items.each do |item| %>
+              <tr>
+                <td><%= link_to item[:product].display_common_name, product_path(item[:product]) %></td>
+                <td><%= number_to_currency(item[:unit_price_cents] / 100.0) %></td>
+                <td><%= item[:quantity] %></td>
+                <td><%= number_to_currency(item[:line_total_cents] / 100.0) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
 
-    <div class="box">
-      <p><strong>Subtotal:</strong> <%= number_to_currency(@subtotal_cents / 100.0) %></p>
-      <p><strong>Tax (<%= number_to_percentage(@tax_rate * 100, precision: 2) %>):</strong> <%= number_to_currency(@tax_cents / 100.0) %></p>
-      <p class="title is-5 mt-3"><strong>Total:</strong> <%= number_to_currency(@total_cents / 100.0) %></p>
-    </div>
+      <div class="box">
+        <p><strong>Subtotal:</strong> <%= number_to_currency(@subtotal_cents / 100.0) %></p>
+        <p><strong>Tax (<%= number_to_percentage(@tax_rate * 100, precision: 2) %>):</strong> <%= number_to_currency(@tax_cents / 100.0) %></p>
+        <p class="title is-5 mt-3">
+          <strong>Total:</strong>
+          <%= number_to_currency(@total_cents / 100.0) %>
+        </p>
+      </div>
 
-    <div class="box">
-      <h2 class="title is-5">Shipping Snapshot</h2>
-      <p><strong>Address:</strong> <%= @shipping_address_snapshot %></p>
-      <p><strong>Province:</strong> <%= @province_snapshot %></p>
-    </div>
+      <div class="box">
+        <h2 class="title is-5">Shipping Summary</h2>
+        <p><strong>Address:</strong> <%= @shipping_address_snapshot %></p>
+        <p><strong>Province:</strong> <%= @province_snapshot.presence || "Not selected" %></p>
+      </div>
 
-    <div class="buttons">
-      <%= link_to "Back to Cart", cart_path, class: "button is-light" %>
-      <%= button_to "Place Order", orders_path, method: :post, class: "button is-link" %>
-    </div>
+      <div class="buttons">
+        <%= link_to "Back to Cart", cart_path, class: "button is-light" %>
+        <%= button_tag "Update Totals", type: "submit", name: "checkout_action", value: "update_totals", class: "button is-info is-light" %>
+        <%= button_tag "Place Order", type: "submit", name: "checkout_action", value: "place_order", class: "button is-link" %>
+      </div>
+    <% end %>
   </div>
 </section>

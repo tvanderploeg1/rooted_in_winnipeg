@@ -21,6 +21,7 @@
               <th>Product</th>
               <th>Quantity</th>
               <th>Unit Price</th>
+              <th>Tax Rate</th>
               <th>Line Total</th>
             </tr>
           </thead>
@@ -30,6 +31,7 @@
                 <td><%= item.product.display_common_name %></td>
                 <td><%= item.quantity %></td>
                 <td><%= number_to_currency(item.unit_price_cents.to_f / 100) %></td>
+                <td><%= number_to_percentage(item.tax_rate.to_d * 100, precision: 2) %></td>
                 <td><%= number_to_currency((item.unit_price_cents * item.quantity).to_f / 100) %></td>
               </tr>
             <% end %>
