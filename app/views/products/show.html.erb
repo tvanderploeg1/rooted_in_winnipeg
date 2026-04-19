@@ -16,6 +16,10 @@
       <div class="column is-12-mobile is-6-tablet">
         <h1 class="title"><%= @product.display_common_name %></h1>
         <p class="subtitle is-5"><%= @product.scientific_name %></p>
+        <p class="mb-4">
+          <strong>Description:</strong>
+          <%= @product.description.presence || "No description available." %>
+        </p>
 
         <p class="mb-2">
           <strong>Category:</strong>

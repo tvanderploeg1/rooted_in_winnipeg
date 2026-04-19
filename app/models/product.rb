@@ -7,6 +7,9 @@ class Product < ApplicationRecord
   has_one_attached :image
 
   validates :name, presence: true, uniqueness: { scope: :scientific_name }
+  validates :description, presence: true, length: { minimum: 20, maximum: 1200 }
+  validates :scientific_name, length: { maximum: 120 }, allow_blank: true
+  validates :watering, :sunlight, :family, :genus, presence: true, length: { maximum: 120 }
   validates :price, presence: true, numericality: { greater_than: 0 }
   validates :stock, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :perenual_id, numericality: { only_integer: true }, uniqueness: true, allow_nil: true
