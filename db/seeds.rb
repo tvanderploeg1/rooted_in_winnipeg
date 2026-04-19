@@ -145,3 +145,4 @@ seed_provinces!
 seed_products_from_perenual!
 
 puts "== Seeding complete =="
+AdminUser.create!(email: 'admin@example.com', password: 'password', password_confirmation: 'password') if Rails.env.development?

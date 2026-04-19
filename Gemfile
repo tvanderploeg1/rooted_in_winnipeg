@@ -72,3 +72,4 @@ gem "dotenv-rails", groups: [ :development, :test ]
 gem "stripe"
 gem "faker"
 gem "kaminari"
+gem "activeadmin"
