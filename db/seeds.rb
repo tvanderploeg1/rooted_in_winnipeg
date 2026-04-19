@@ -109,11 +109,7 @@ def seed_products_from_perenual!
     next if name.blank?
 
     product = Product.find_or_initialize_by(perenual_id: perenual_id)
-    if product.new_record?
-      product = Product.find_or_initialize_by(name: name, scientific_name: scientific_name)
-      next if product.new_record? && Product.count >= SEED_TARGET_PRODUCTS
-    end
-    next if product.persisted? && product.perenual_id.present? && product.perenual_id != perenual_id
+    next if product.new_record? && Product.count >= SEED_TARGET_PRODUCTS
 
     raw_sunlight = Array(species_row["sunlight"]).join(", ")
     raw_watering = species_row["watering"].to_s
@@ -134,7 +130,6 @@ def seed_products_from_perenual!
     product.price ||= Faker::Commerce.price(range: 8.99..89.99).to_d
     product.stock ||= Faker::Number.between(from: 5, to: 50)
     product.category = category
-    product.perenual_id ||= perenual_id
     product.save!
     attach_product_image(product, image_url_for(species_row))
 

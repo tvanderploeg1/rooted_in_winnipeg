@@ -9,33 +9,13 @@ class OrdersController < ApplicationController
   def create
     return unless prepare_checkout
 
-    unavailable_item = @checkout_items.find { |item| item[:quantity] > item[:product].stock.to_i }
+    unavailable_item = stock_unavailable_item
     if unavailable_item.present?
       redirect_to cart_path, alert: "Not enough stock for #{unavailable_item[:product].display_common_name}."
       return
     end
 
-    order = nil
-
-    ActiveRecord::Base.transaction do
-      order = current_user.orders.create!(
-        status: "pending",
-        total_cents: @total_cents,
-        tax_amount_cents: @tax_cents,
-        shipping_address: shipping_address_snapshot,
-        province_snapshot: province_snapshot
-      )
-
-      @checkout_items.each do |item|
-        order.order_items.create!(
-          product: item[:product],
-          quantity: item[:quantity],
-          unit_price_cents: item[:unit_price_cents]
-        )
-
-        item[:product].update!(stock: item[:product].stock - item[:quantity])
-      end
-    end
+    order = create_pending_order_from_checkout!
 
     session[:cart] = {}
     redirect_to order_path(order), notice: "Order created successfully."
@@ -109,6 +89,35 @@ class OrdersController < ApplicationController
 
   def province_snapshot
     current_user.province&.name
+  end
+
+  def stock_unavailable_item
+    @checkout_items.find { |item| item[:quantity] > item[:product].stock.to_i }
+  end
+
+  def create_pending_order_from_checkout!
+    order = nil
+
+    ActiveRecord::Base.transaction do
+      order = current_user.orders.create!(
+        status: "pending",
+        total_cents: @total_cents,
+        tax_amount_cents: @tax_cents,
+        shipping_address: shipping_address_snapshot,
+        province_snapshot: province_snapshot
+      )
+
+      @checkout_items.each do |item|
+        order.order_items.create!(
+          product: item[:product],
+          quantity: item[:quantity],
+          unit_price_cents: item[:unit_price_cents]
+        )
+        item[:product].update!(stock: item[:product].stock - item[:quantity])
+      end
+    end
+
+    order
   end
 
   def set_order
