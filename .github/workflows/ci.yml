@@ -139,7 +139,13 @@ jobs:
           bundler-cache: true
 
       - name: Run System Tests
-        run: bin/rails db:test:prepare test:system
+        run: |
+          bin/rails db:test:prepare
+          if ls test/system/*_test.rb >/dev/null 2>&1; then
+            bin/rails test:system
+          else
+            echo "No system tests found, skipping."
+          fi
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v7

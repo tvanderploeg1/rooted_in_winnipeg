@@ -1,5 +1,4 @@
 class StaticPagesController < ApplicationController
-
   def home
     product_ids_with_images = Product.joins(:image_attachment).distinct.pluck(:id)
     featured_ids = product_ids_with_images.sample(9)
