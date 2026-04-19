@@ -3,7 +3,7 @@ class OrdersController < ApplicationController
   before_action :set_order, only: :show
 
   def new
-    return unless prepare_checkout(default_checkout_profile)
+    nil unless prepare_checkout(default_checkout_profile)
   end
 
   def create

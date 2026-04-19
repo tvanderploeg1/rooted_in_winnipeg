@@ -57,6 +57,17 @@ rescue StandardError => e
   puts "Image attach skipped for #{product.name}: #{e.message}"
 end
 
+def generated_description_for(name:, scientific_name:, family:, watering:, sunlight:)
+  care_sentence = "#{name} thrives in #{sunlight.downcase} and prefers #{watering.downcase} watering."
+  botanical_sentence = if scientific_name.present?
+    "Known botanically as #{scientific_name}, it belongs to the #{family} family."
+  else
+    "This variety belongs to the #{family} family."
+  end
+
+  [ botanical_sentence, care_sentence ].join(" ")
+end
+
 def seed_categories!
   CATEGORY_NAMES.each do |name|
     Category.find_or_create_by!(name: name)
@@ -122,7 +133,13 @@ def seed_products_from_perenual!
 
     product.name = name
     product.scientific_name = scientific_name
-    product.description = nil
+    product.description = generated_description_for(
+      name: name,
+      scientific_name: scientific_name,
+      family: family_value,
+      watering: watering_value,
+      sunlight: sunlight_value
+    ) if product.description.blank?
     product.watering = watering_value
     product.sunlight = sunlight_value
     product.family = family_value
