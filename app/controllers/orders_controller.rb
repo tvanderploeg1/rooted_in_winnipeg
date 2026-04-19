@@ -166,7 +166,8 @@ class OrdersController < ApplicationController
         order.order_items.create!(
           product: item[:product],
           quantity: item[:quantity],
-          unit_price_cents: item[:unit_price_cents]
+          unit_price_cents: item[:unit_price_cents],
+          tax_rate: @tax_rate
         )
         item[:product].update!(stock: item[:product].stock - item[:quantity])
       end
