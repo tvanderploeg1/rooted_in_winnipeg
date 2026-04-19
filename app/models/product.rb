@@ -20,4 +20,15 @@ class Product < ApplicationRecord
 
     "#{display_common_name} (#{scientific_name})"
   end
+
+  def self.ransackable_attributes(_auth_object = nil)
+    %w[
+      category_id created_at description family genus id name perenual_id
+      price scientific_name stock sunlight updated_at watering
+    ]
+  end
+
+  def self.ransackable_associations(_auth_object = nil)
+    %w[category image_attachment image_blob order_items orders]
+  end
 end

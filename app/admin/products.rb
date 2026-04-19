@@ -30,8 +30,8 @@ ActiveAdmin.register Product do
       f.input :sunlight
       f.input :family
       f.input :genus
-      f.input :price
-      f.input :stock
+      f.input :price, input_html: { min: 0.01, step: 0.01 }
+      f.input :stock, input_html: { min: 0, step: 1 }
       f.input :perenual_id
       f.input :category
       f.input :image, as: :file
