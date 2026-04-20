@@ -2,13 +2,10 @@
   <div class="card is-fullheight">
     <div class="card-image">
       <figure class="image is-4by3">
-        <% if product.image.attached? %>
-          <%= image_tag product.image, alt: product.display_name %>
-        <% else %>
-          <div class="has-background-light has-text-grey p-4 has-text-centered">
-            No image available
-          </div>
-        <% end %>
+        <%= render "shared/product_image",
+            product: product,
+            image_class: nil,
+            fallback_text: "No image available" %>
       </figure>
     </div>
     <div class="card-content">

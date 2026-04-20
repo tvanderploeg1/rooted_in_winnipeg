@@ -1,4 +1,12 @@
 class Product < ApplicationRecord
+  FALLBACK_IMAGE_BY_CATEGORY = {
+    "Tropicals" => "tropicals_stock_photo.png",
+    "Succulents & Cacti" => "succulents_cacti_stock_photo.png",
+    "Herbs & Edibles" => "herb_edibles_stock_photo.png",
+    "Low Light" => "low_light_stock_photo.png",
+    "Outdoor Seasonal" => "outdoor_seasonal_stock_photo.png"
+  }.freeze
+
   belongs_to :category
 
   has_many :order_items, dependent: :destroy
@@ -22,6 +30,16 @@ class Product < ApplicationRecord
     return display_common_name if scientific_name.blank?
 
     "#{display_common_name} (#{scientific_name})"
+  end
+
+  def fallback_image_filename
+    FALLBACK_IMAGE_BY_CATEGORY[category&.name]
+  end
+
+  def image_for_display
+    return image if image.attached?
+
+    fallback_image_filename
   end
 
   def self.ransackable_attributes(_auth_object = nil)

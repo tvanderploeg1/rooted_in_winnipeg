@@ -10,7 +10,7 @@
               <p><strong>Order #:</strong> <%= order.id %></p>
               <p><strong>Status:</strong> <%= order.status.titleize %></p>
               <p><strong>Total:</strong> <%= number_to_currency(order.total_cents.to_f / 100) %></p>
-              <p><strong>Placed:</strong> <%= order.created_at.strftime("%b %-d, %Y") %></p>
+              <p><strong>Placed:</strong> <%= order.created_at.strftime("%b %-d, %Y at %-I:%M %p") %></p>
               <%= link_to "View Details", order_path(order), class: "button is-small is-link is-light mt-3" %>
             </div>
           </div>

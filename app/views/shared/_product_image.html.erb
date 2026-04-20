@@ -1,0 +1,9 @@
+<% image_source = product.image_for_display %>
+
+<% if image_source.present? %>
+  <%= image_tag image_source, alt: product.display_name, class: image_class %>
+<% else %>
+  <div class="has-background-light has-text-grey p-4 has-text-centered">
+    <%= fallback_text %>
+  </div>
+<% end %>

@@ -2,15 +2,12 @@
   <div class="container">
     <div class="columns is-variable is-6">
       <div class="column is-12-mobile is-6-tablet">
-        <% if @product.image.attached? %>
-          <figure class="image is-4by3">
-            <%= image_tag @product.image, alt: @product.display_name %>
-          </figure>
-        <% else %>
-          <div class="notification is-light">
-            No image available for this product yet.
-          </div>
-        <% end %>
+        <figure class="image is-4by3">
+          <%= render "shared/product_image",
+              product: @product,
+              image_class: nil,
+              fallback_text: "No image available for this product yet." %>
+        </figure>
       </div>
 
       <div class="column is-12-mobile is-6-tablet">

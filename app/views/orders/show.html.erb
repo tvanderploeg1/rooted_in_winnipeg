@@ -9,6 +9,7 @@
       <p><strong>Total:</strong> <%= number_to_currency(@order.total_cents.to_f / 100) %></p>
       <p><strong>Shipping Address:</strong> <%= @order.shipping_address.presence || "Not available" %></p>
       <p><strong>Province:</strong> <%= @order.province_snapshot.presence || "Not available" %></p>
+      <p><strong>Placed:</strong> <%= @order.created_at.strftime("%b %-d, %Y at %-I:%M %p") %></p>
     </div>
 
     <div class="box">
