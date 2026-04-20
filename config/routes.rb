@@ -14,6 +14,7 @@ Rails.application.routes.draw do
   resources :cart_items, only: [ :create, :destroy, :update ]
   get "checkout", to: "orders#new", as: :checkout
   get "account", to: "accounts#show", as: :account
+  post "stripe/webhook", to: "stripe_webhooks#create"
 
   get "up" => "rails/health#show", as: :rails_health_check
 end
