@@ -43,6 +43,10 @@
       </div>
     </div>
 
+    <% if @order.pending? %>
+      <%= button_to "Start Payment", start_payment_order_path(@order), method: :post, class: "button is-link mb-3" %>
+    <% end %>
+
     <%= link_to "Back to Orders", orders_path, class: "button is-light" %>
   </div>
 </section>

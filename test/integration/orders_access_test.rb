@@ -1,4 +1,5 @@
 require "test_helper"
+require "ostruct"
 
 class OrdersAccessTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
@@ -84,5 +85,58 @@ class OrdersAccessTest < ActionDispatch::IntegrationTest
     assert_redirected_to orders_path
     follow_redirect!
     assert_includes response.body, "Order not found."
+  end
+
+  test "guest is redirected from start payment" do
+    post start_payment_order_path(@order_one)
+
+    assert_redirected_to new_user_session_path
+  end
+
+  test "signed in user can start payment for their pending order" do
+    sign_in @user_one
+
+    with_stubbed_payment_intent do
+      post start_payment_order_path(@order_one)
+    end
+
+    assert_redirected_to order_path(@order_one)
+    @order_one.reload
+    assert_equal "pi_test_123", @order_one.stripe_payment_id
+    assert_equal "cus_test_123", @order_one.stripe_customer_id
+  end
+
+  test "signed in user cannot start payment for non-pending order" do
+    sign_in @user_two
+
+    post start_payment_order_path(@order_two)
+
+    assert_redirected_to order_path(@order_two)
+    follow_redirect!
+    assert_includes response.body, "Only pending orders can start payment."
+  end
+
+  test "signed in user cannot start payment for another users order" do
+    sign_in @user_one
+
+    post start_payment_order_path(@order_two)
+
+    assert_redirected_to orders_path
+    follow_redirect!
+    assert_includes response.body, "Order not found."
+  end
+
+  private
+
+  def with_stubbed_payment_intent
+    original_create = Stripe::PaymentIntent.method(:create)
+
+    Stripe::PaymentIntent.singleton_class.send(:define_method, :create) do |*_args|
+      OpenStruct.new(id: "pi_test_123", customer: "cus_test_123")
+    end
+
+    yield
+  ensure
+    Stripe::PaymentIntent.singleton_class.send(:define_method, :create, original_create)
   end
 end

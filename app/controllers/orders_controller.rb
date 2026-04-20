@@ -1,6 +1,6 @@
 class OrdersController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_order, only: :show
+  before_action :set_order, only: [ :show, :start_payment ]
   rescue_from ActiveRecord::RecordNotFound, with: :handle_order_not_found
 
   def new
@@ -51,6 +51,37 @@ class OrdersController < ApplicationController
   end
 
   def show
+  end
+
+  def start_payment
+    unless @order.pending?
+      redirect_to order_path(@order), alert: "Only pending orders can start payment."
+      return
+    end
+
+    if @order.stripe_payment_id.present?
+      redirect_to order_path(@order), alert: "Payment has already been started for this order."
+      return
+    end
+
+    payment_intent = Stripe::PaymentIntent.create(
+      amount: @order.total_cents,
+      currency: "cad",
+      metadata: {
+        order_id: @order.id,
+        user_id: current_user.id
+      },
+      automatic_payment_methods: { enabled: true }
+    )
+
+    @order.update!(
+      stripe_payment_id: payment_intent.id,
+      stripe_customer_id: payment_intent.customer
+    )
+
+    redirect_to order_path(@order), notice: "Payment started. Confirmation step comes next."
+  rescue Stripe::StripeError => e
+    redirect_to order_path(@order), alert: "Unable to start Stripe payment: #{e.message}"
   end
 
   private
