@@ -1,0 +1,36 @@
+<div class="column is-12-mobile is-6-tablet is-4-desktop">
+  <div class="card is-fullheight">
+    <div class="card-image">
+      <figure class="image is-4by3">
+        <% if product.image.attached? %>
+          <%= image_tag product.image, alt: product.display_name %>
+        <% else %>
+          <div class="has-background-light has-text-grey p-4 has-text-centered">
+            No image available
+          </div>
+        <% end %>
+      </figure>
+    </div>
+    <div class="card-content">
+      <p class="title is-5 mb-2"><%= product.display_common_name %></p>
+      <p class="is-size-7 has-text-grey <%= show_category ? "mb-2" : "mb-4" %>"><%= product.scientific_name %></p>
+
+      <% if show_category %>
+        <p class="mb-2">
+          <strong>Category:</strong>
+          <%= link_to product.category.name, category_path(product.category) %>
+        </p>
+        <p class="mb-4">
+          <strong>Price:</strong>
+          <%= number_to_currency(product.price) %>
+        </p>
+      <% end %>
+
+      <% if show_add_to_cart %>
+        <%= button_to "Add to Cart", cart_items_path(product_id: product.id), method: :post, class: "button is-link mb-3 is-fullwidth" %>
+      <% end %>
+
+      <%= link_to "View Details", product_path(product), class: "button is-link is-light is-fullwidth" %>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,22 @@
+<div class="mt-4 <%= top_margin_class %>">
+  <%= paginate products, params: request.query_parameters %>
+</div>
+
+<% if products.any? %>
+  <div class="columns is-multiline">
+    <% products.each do |product| %>
+      <%= render "products/product_card",
+          product: product,
+          show_category: show_category,
+          show_add_to_cart: show_add_to_cart %>
+    <% end %>
+  </div>
+<% else %>
+  <div class="notification is-light">
+    <%= empty_message %>
+  </div>
+<% end %>
+
+<div class="mt-4">
+  <%= paginate products, params: request.query_parameters %>
+</div>
