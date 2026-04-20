@@ -122,6 +122,8 @@ class OrdersAccessTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Payment for Order ##{@order_one.id}"
+    assert_includes response.body, "data-controller=\"stripe-payment\""
+    assert_includes response.body, "Pay now"
   end
 
   test "signed in user cannot view payment page for non pending order" do

@@ -1,23 +1,36 @@
-<section class="section">
+<section class="section" data-turbo="false">
   <div class="container">
     <h1 class="title is-3">Payment for Order #<%= @order.id %></h1>
 
     <div class="box">
       <p><strong>Status:</strong> <%= @order.status.titleize %></p>
       <p><strong>Total:</strong> <%= number_to_currency(@order.total_cents.to_f / 100) %></p>
-      <p class="mt-3">Payment form wiring comes in the next chunk.</p>
     </div>
 
-    <div class="box">
-      <p class="mb-2"><strong>Stripe client data is ready:</strong></p>
-      <p><code>publishable_key</code> present: <%= @stripe_publishable_key.present? %></p>
-      <p><code>client_secret</code> present: <%= @stripe_client_secret.present? %></p>
+    <div
+      class="box"
+      data-controller="stripe-payment"
+      data-stripe-payment-publishable-key-value="<%= @stripe_publishable_key %>"
+      data-stripe-payment-client-secret-value="<%= @stripe_client_secret %>"
+      data-stripe-payment-return-url-value="<%= order_url(@order) %>">
+      <p class="mb-3">Enter your card details below. Your order shows as paid only after Stripe confirms payment (webhook).</p>
 
       <div
-        id="stripe-payment-element"
-        data-publishable-key="<%= @stripe_publishable_key %>"
-        data-client-secret="<%= @stripe_client_secret %>">
-      </div>
+        class="notification is-danger is-light mb-3"
+        role="alert"
+        data-stripe-payment-target="errorMessage"
+        hidden></div>
+
+      <div class="mb-4" data-stripe-payment-target="mount"></div>
+
+      <button
+        type="button"
+        class="button is-link"
+        data-stripe-payment-target="submitButton"
+        data-action="click->stripe-payment#submit"
+        disabled>
+        Pay now
+      </button>
     </div>
 
     <%= link_to "Back to Order", order_path(@order), class: "button is-light" %>
