@@ -22,4 +22,15 @@ class Order < ApplicationRecord
 
     tax_amount_cents.to_d / subtotal_cents
   end
+
+  def self.ransackable_attributes(_auth_object = nil)
+    %w[
+      created_at id province_snapshot shipping_address status
+      tax_amount_cents total_cents updated_at user_id
+    ]
+  end
+
+  def self.ransackable_associations(_auth_object = nil)
+    %w[order_items products user]
+  end
 end

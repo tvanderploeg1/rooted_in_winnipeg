@@ -1,6 +1,7 @@
 class OrdersController < ApplicationController
   before_action :authenticate_user!
   before_action :set_order, only: :show
+  rescue_from ActiveRecord::RecordNotFound, with: :handle_order_not_found
 
   def new
     nil unless prepare_checkout(default_checkout_profile)
@@ -181,5 +182,9 @@ class OrdersController < ApplicationController
 
   def set_order
     @order = current_user.orders.includes(order_items: :product).find(params[:id])
+  end
+
+  def handle_order_not_found
+    redirect_to orders_path, alert: "Order not found."
   end
 end

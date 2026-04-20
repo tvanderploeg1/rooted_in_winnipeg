@@ -162,13 +162,11 @@ def attach_product_image(product, species_row)
       )
       ext = File.extname(URI.parse(image_url).path).presence || ".jpg"
       product.image.attach(io: image_io, filename: "product-#{product.perenual_id || product.id}#{ext}")
-      return
+      nil
     rescue StandardError => e
       puts "Image fetch failed for #{product.name}: #{e.message}"
     end
   end
-
-  # Display fallback image is handled by Product#image_for_display in app layer.
 end
 
 def classify_category_name(species_row)
