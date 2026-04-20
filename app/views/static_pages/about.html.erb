@@ -1,32 +1,66 @@
 <section class="section">
   <div class="container">
     <h1 class="title">About Rooted in Winnipeg</h1>
+
     <div class="content">
       <p>
-        Rooted in Winnipeg is an ecommerce capstone project focused on selling plants
-        relevant to Winnipeg and prairie climates.
+        <strong>Rooted in Winnipeg</strong> is a WEBD-3011 e-commerce project that models a real
+        local plant shop expanding from in-store sales into a full online storefront.
       </p>
       <p>
-        The app demonstrates product browsing, category navigation, authentication,
-        cart and checkout flow, and order tracking using Rails.
-      </p>
-      <p>
-        Product seed data is sourced from the Perenual plant API, with additional
-        local category and tax/province data managed in the app database.
+        The project focuses on building a practical Rails commerce experience end-to-end:
+        product browsing, category navigation, search/filtering, customer accounts, cart + checkout,
+        tax calculation by province, and order history.
       </p>
     </div>
 
-    <article class="message is-info">
+    <article class="message is-primary">
       <div class="message-header">
-        <p>Dataset Snapshot</p>
+        <p>Project Scope</p>
       </div>
       <div class="message-body">
         <ul>
-          <li>Primary source: Perenual API plant records</li>
-          <li>Local tables: categories, provinces, products, users, orders</li>
-          <li>Purpose: realistic ecommerce data for rubric-required features</li>
+          <li>Rails 8 + PostgreSQL architecture using standard MVC conventions</li>
+          <li>Category-based plant catalog with pagination and keyword search</li>
+          <li>Session cart and checkout flow with snapshot-based order totals</li>
+          <li>Customer authentication and account-linked order tracking</li>
+          <li>Stripe-ready payment integration path for capstone milestones</li>
         </ul>
       </div>
     </article>
+
+    <article class="message is-info">
+      <div class="message-header">
+        <p>Data Model & Integrity</p>
+      </div>
+      <div class="message-body">
+        <ul>
+          <li>Products belong to categories and include real botanical attributes</li>
+          <li>Users are linked to provinces to support GST/PST/HST tax logic</li>
+          <li>Orders store immutable financial snapshots for historical accuracy</li>
+          <li>Order items preserve unit price at purchase time for audit-safe totals</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="message is-link">
+      <div class="message-header">
+        <p>Seed Data Source</p>
+      </div>
+      <div class="message-body">
+        <ul>
+          <li>Plant records are sourced from the Perenual API</li>
+          <li>Categories and regional tax data are seeded locally in-app</li>
+          <li>A <code>PERENUAL_API_KEY</code> is required for full product seeding</li>
+          <li>Fallback values/images keep seed runs resilient when API fields are missing</li>
+        </ul>
+      </div>
+    </article>
+
+    <div class="content">
+      <p>
+        This project (tries) to follow an incremental build style: complete one working feature at a time, then move to the next.
+      </p>
+    </div>
   </div>
 </section>

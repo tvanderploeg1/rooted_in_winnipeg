@@ -1,24 +1,64 @@
-# README
+# Rooted in Winnipeg
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Rails 8 e-commerce capstone project for a Winnipeg-focused plant shop.
 
-Things you may want to cover:
+## Prerequisites
 
-* Ruby version
+- Ruby `3.3.5` (see `.ruby-version`)
+- PostgreSQL running locally
+- Node.js + Yarn
 
-* System dependencies
+## 1) Configure environment variables
 
-* Configuration
+Create a `.env` file in the project root (or update the existing one) with:
 
-* Database creation
+```bash
+DB_PASSWORD=your_postgres_password
+PERENUAL_API_KEY=your_perenual_api_key
+STRIPE_SECRET_KEY=replace_me
+STRIPE_PUBLISHABLE_KEY=replace_me
+```
 
-* Database initialization
+The app can boot without Stripe keys for basic local development, but if you want to seed product data you will need a valid `PERENUAL_API_KEY` because `db/seeds.rb` fetches plant data from the Perenual API.
 
-* How to run the test suite
+## 2) Install dependencies
 
-* Services (job queues, cache servers, search engines, etc.)
+```bash
+bundle install
+yarn install
+```
 
-* Deployment instructions
+Or use the project helper script:
 
-* ...
+```bash
+bin/setup --skip-server
+```
+
+## 3) Prepare the database
+
+```bash
+bin/rails db:prepare
+```
+
+If you want to load the full seed data:
+
+```bash
+bin/rails db:seed
+```
+
+## 4) Run the app
+
+Start Rails and the CSS watcher together:
+
+```bash
+bin/dev
+```
+
+Then open [http://localhost:3000](http://localhost:3000).
+
+## Useful commands
+
+- Run tests: `bin/rails test`
+- RuboCop: `bin/rubocop`
+- Brakeman: `bin/brakeman`
+- Bundler audit: `bin/bundler-audit`
