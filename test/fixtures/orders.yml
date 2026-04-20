@@ -5,8 +5,6 @@ one:
   status: pending
   total_cents: 1
   tax_amount_cents: 1
-  stripe_payment_id: MyString
-  stripe_customer_id: MyString
   shipping_address: MyString
   province_snapshot: MyString
 
@@ -15,7 +13,5 @@ two:
   status: paid
   total_cents: 1
   tax_amount_cents: 1
-  stripe_payment_id: MyString
-  stripe_customer_id: MyString
   shipping_address: MyString
   province_snapshot: MyString

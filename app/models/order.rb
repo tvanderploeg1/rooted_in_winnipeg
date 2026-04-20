@@ -12,4 +12,14 @@ class Order < ApplicationRecord
   validates :province_snapshot, length: { maximum: 80 }
   validates :total_cents, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :tax_amount_cents, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+
+  def subtotal_cents
+    total_cents.to_i - tax_amount_cents.to_i
+  end
+
+  def effective_tax_rate
+    return 0.to_d unless subtotal_cents.positive?
+
+    tax_amount_cents.to_d / subtotal_cents
+  end
 end
