@@ -96,14 +96,63 @@ class OrdersAccessTest < ActionDispatch::IntegrationTest
   test "signed in user can start payment for their pending order" do
     sign_in @user_one
 
-    with_stubbed_payment_intent do
+    with_stubbed_payment_intent_create do
       post start_payment_order_path(@order_one)
     end
 
-    assert_redirected_to order_path(@order_one)
+    assert_redirected_to payment_order_path(@order_one)
     @order_one.reload
     assert_equal "pi_test_123", @order_one.stripe_payment_id
     assert_equal "cus_test_123", @order_one.stripe_customer_id
+  end
+
+  test "guest is redirected from payment page" do
+    get payment_order_path(@order_one)
+
+    assert_redirected_to new_user_session_path
+  end
+
+  test "signed in user can view payment page for their pending order with started payment" do
+    sign_in @user_one
+    @order_one.update!(stripe_payment_id: "pi_test_123")
+
+    with_stubbed_payment_intent_retrieve do
+      get payment_order_path(@order_one)
+    end
+
+    assert_response :success
+    assert_includes response.body, "Payment for Order ##{@order_one.id}"
+  end
+
+  test "signed in user cannot view payment page for non pending order" do
+    sign_in @user_two
+    @order_two.update!(stripe_payment_id: "pi_paid_123")
+
+    get payment_order_path(@order_two)
+
+    assert_redirected_to order_path(@order_two)
+    follow_redirect!
+    assert_includes response.body, "Payment page is only available for pending orders."
+  end
+
+  test "signed in user cannot view payment page before payment is started" do
+    sign_in @user_one
+
+    get payment_order_path(@order_one)
+
+    assert_redirected_to order_path(@order_one)
+    follow_redirect!
+    assert_includes response.body, "Start payment first before opening payment details."
+  end
+
+  test "signed in user cannot view another users payment page" do
+    sign_in @user_one
+
+    get payment_order_path(@order_two)
+
+    assert_redirected_to orders_path
+    follow_redirect!
+    assert_includes response.body, "Order not found."
   end
 
   test "signed in user cannot start payment for non-pending order" do
@@ -128,7 +177,7 @@ class OrdersAccessTest < ActionDispatch::IntegrationTest
 
   private
 
-  def with_stubbed_payment_intent
+  def with_stubbed_payment_intent_create
     original_create = Stripe::PaymentIntent.method(:create)
 
     Stripe::PaymentIntent.singleton_class.send(:define_method, :create) do |*_args|
@@ -138,5 +187,17 @@ class OrdersAccessTest < ActionDispatch::IntegrationTest
     yield
   ensure
     Stripe::PaymentIntent.singleton_class.send(:define_method, :create, original_create)
+  end
+
+  def with_stubbed_payment_intent_retrieve
+    original_retrieve = Stripe::PaymentIntent.method(:retrieve)
+
+    Stripe::PaymentIntent.singleton_class.send(:define_method, :retrieve) do |*_args|
+      OpenStruct.new(id: "pi_test_123", client_secret: "pi_test_123_secret_abc")
+    end
+
+    yield
+  ensure
+    Stripe::PaymentIntent.singleton_class.send(:define_method, :retrieve, original_retrieve)
   end
 end

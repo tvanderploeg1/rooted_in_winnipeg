@@ -1,6 +1,6 @@
 class OrdersController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_order, only: [ :show, :start_payment ]
+  before_action :set_order, only: [ :show, :start_payment, :payment ]
   rescue_from ActiveRecord::RecordNotFound, with: :handle_order_not_found
 
   def new
@@ -79,9 +79,27 @@ class OrdersController < ApplicationController
       stripe_customer_id: payment_intent.customer
     )
 
-    redirect_to order_path(@order), notice: "Payment started. Confirmation step comes next."
+    redirect_to payment_order_path(@order), notice: "Payment started. Enter payment details to continue."
   rescue Stripe::StripeError => e
     redirect_to order_path(@order), alert: "Unable to start Stripe payment: #{e.message}"
+  end
+
+  def payment
+    unless @order.pending?
+      redirect_to order_path(@order), alert: "Payment page is only available for pending orders."
+      return
+    end
+
+    if @order.stripe_payment_id.blank?
+      redirect_to order_path(@order), alert: "Start payment first before opening payment details."
+      return
+    end
+
+    payment_intent = Stripe::PaymentIntent.retrieve(@order.stripe_payment_id)
+    @stripe_client_secret = payment_intent.client_secret
+    @stripe_publishable_key = ENV["STRIPE_PUBLISHABLE_KEY"].to_s
+  rescue Stripe::StripeError => e
+    redirect_to order_path(@order), alert: "Unable to load Stripe payment details: #{e.message}"
   end
 
   private

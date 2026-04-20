@@ -43,6 +43,10 @@
       </div>
     </div>
 
+    <% if @order.pending? && @order.stripe_payment_id.present? %>
+      <%= link_to "Continue Payment", payment_order_path(@order), class: "button is-link mb-3 mr-2" %>
+    <% end %>
+
     <% if @order.pending? %>
       <%= button_to "Start Payment", start_payment_order_path(@order), method: :post, class: "button is-link mb-3" %>
     <% end %>

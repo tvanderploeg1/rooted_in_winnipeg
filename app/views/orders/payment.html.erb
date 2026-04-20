@@ -1,0 +1,25 @@
+<section class="section">
+  <div class="container">
+    <h1 class="title is-3">Payment for Order #<%= @order.id %></h1>
+
+    <div class="box">
+      <p><strong>Status:</strong> <%= @order.status.titleize %></p>
+      <p><strong>Total:</strong> <%= number_to_currency(@order.total_cents.to_f / 100) %></p>
+      <p class="mt-3">Payment form wiring comes in the next chunk.</p>
+    </div>
+
+    <div class="box">
+      <p class="mb-2"><strong>Stripe client data is ready:</strong></p>
+      <p><code>publishable_key</code> present: <%= @stripe_publishable_key.present? %></p>
+      <p><code>client_secret</code> present: <%= @stripe_client_secret.present? %></p>
+
+      <div
+        id="stripe-payment-element"
+        data-publishable-key="<%= @stripe_publishable_key %>"
+        data-client-secret="<%= @stripe_client_secret %>">
+      </div>
+    </div>
+
+    <%= link_to "Back to Order", order_path(@order), class: "button is-light" %>
+  </div>
+</section>
