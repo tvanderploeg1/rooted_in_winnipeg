@@ -13,6 +13,13 @@
 
     <div class="box">
       <h2 class="title is-5">Order Items</h2>
+      <% order_subtotal_cents = @order.total_cents.to_i - @order.tax_amount_cents.to_i %>
+      <% fallback_tax_rate =
+          if order_subtotal_cents.positive?
+            @order.tax_amount_cents.to_d / order_subtotal_cents
+          else
+            0.to_d
+          end %>
 
       <div class="table-container">
         <table class="table is-fullwidth is-striped">
@@ -27,12 +34,16 @@
           </thead>
           <tbody>
             <% @order.order_items.each do |item| %>
+              <% item_tax_rate = item.tax_rate.to_d.positive? ? item.tax_rate.to_d : fallback_tax_rate %>
+              <% line_subtotal_cents = item.unit_price_cents.to_i * item.quantity.to_i %>
+              <% line_tax_cents = (line_subtotal_cents * item_tax_rate).round %>
+              <% line_total_cents = line_subtotal_cents + line_tax_cents %>
               <tr>
                 <td><%= item.product.display_common_name %></td>
                 <td><%= item.quantity %></td>
                 <td><%= number_to_currency(item.unit_price_cents.to_f / 100) %></td>
-                <td><%= number_to_percentage(item.tax_rate.to_d * 100, precision: 2) %></td>
-                <td><%= number_to_currency((item.unit_price_cents * item.quantity).to_f / 100) %></td>
+                <td><%= number_to_percentage(item_tax_rate * 100, precision: 2) %></td>
+                <td><%= number_to_currency(line_total_cents.to_f / 100) %></td>
               </tr>
             <% end %>
           </tbody>

@@ -39,8 +39,10 @@ class OrdersController < ApplicationController
 
     session[:cart] = {}
     redirect_to order_path(order), notice: "Order created successfully."
-  rescue ActiveRecord::RecordInvalid
-    redirect_to checkout_path, alert: "Could not place order. Please try again."
+  rescue ActiveRecord::RecordInvalid => e
+    error_message = e.record.errors.full_messages.to_sentence.presence || "Unknown validation error."
+    flash.now[:alert] = "Could not place order: #{error_message}."
+    render :new, status: :unprocessable_entity
   end
 
   def index
@@ -152,6 +154,7 @@ class OrdersController < ApplicationController
 
   def create_pending_order_from_checkout!
     order = nil
+    item_tax_rate = @tax_rate.to_d.round(4)
 
     ActiveRecord::Base.transaction do
       order = current_user.orders.create!(
@@ -167,7 +170,7 @@ class OrdersController < ApplicationController
           product: item[:product],
           quantity: item[:quantity],
           unit_price_cents: item[:unit_price_cents],
-          tax_rate: @tax_rate
+          tax_rate: item_tax_rate
         )
         item[:product].update!(stock: item[:product].stock - item[:quantity])
       end
