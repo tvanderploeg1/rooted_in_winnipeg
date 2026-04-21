@@ -39,6 +39,8 @@ bundle install
 yarn install
 ```
 
+Implementation note: the project keeps both `dartsass-rails` (storefront Bulma compilation) and `sassc-rails` (sprockets/engine compatibility).
+
 Or use the project helper script:
 
 ```bash
@@ -87,7 +89,6 @@ docker run --rm -p 3000:80 \
   --name rooted-in-winnipeg \
   rooted-in-winnipeg
 ```
-
 Quick check (in a second terminal): `curl -I http://localhost:3000`
 
 ## Useful commands
