@@ -14,17 +14,8 @@ class OrdersController < ApplicationController
     submitted_profile = checkout_profile_params.to_h.symbolize_keys
     return unless prepare_checkout(submitted_profile)
 
-    if params[:checkout_action] == "update_totals"
-      flash.now[:notice] = "Totals updated for selected shipping details."
-      render :new, status: :ok
-      return
-    end
-
-    unless @profile_complete
-      flash.now[:alert] = "Please provide a complete shipping address and province."
-      render :new, status: :unprocessable_entity
-      return
-    end
+    return render_totals_updated if params[:checkout_action] == "update_totals"
+    return render_incomplete_profile_error unless @profile_complete
 
     unavailable_item = stock_unavailable_item
     if unavailable_item.present?
@@ -32,12 +23,7 @@ class OrdersController < ApplicationController
       return
     end
 
-    current_user.update!(
-      address: @checkout_profile[:address],
-      city: @checkout_profile[:city],
-      postal_code: @checkout_profile[:postal_code],
-      province_id: @checkout_profile[:province_id]
-    )
+    save_checkout_profile_to_user!
 
     order = create_pending_order_from_checkout!
 
@@ -57,12 +43,12 @@ class OrdersController < ApplicationController
   end
 
   def start_payment
-    unless payment_start_allowed?
+    unless payment_allowed?
       redirect_to order_path(@order), alert: "Only pending or failed orders can start payment."
       return
     end
 
-    if retry_throttled_for_failed_order?
+    if failed_retry_throttled?
       redirect_to order_path(@order), alert: "Too many payment retries. Please wait and try again."
       return
     end
@@ -112,7 +98,7 @@ class OrdersController < ApplicationController
   end
 
   def payment_success
-    unless payment_start_allowed?
+    unless payment_allowed?
       redirect_to order_path(@order), notice: "Order payment is already finalized."
       return
     end
@@ -155,12 +141,12 @@ class OrdersController < ApplicationController
 
   private
 
-  def payment_start_allowed?
+  def payment_allowed?
     @order.pending? || @order.failed?
   end
 
-  def retry_throttled_for_failed_order?
-    @order.failed? && failed_retry_throttled?(@order)
+  def failed_retry_throttled?
+    @order.failed? && retry_limit_reached?
   end
 
   def stripe_session_id
@@ -178,13 +164,32 @@ class OrdersController < ApplicationController
     raw_payment_intent.to_s
   end
 
-  def failed_retry_throttled?(order)
-    cache_key = "order:#{order.id}:failed_retry_attempts"
+  def retry_limit_reached?
+    cache_key = "order:#{@order.id}:failed_retry_attempts"
     attempts = Rails.cache.read(cache_key).to_i
     return true if attempts >= FAILED_RETRY_LIMIT
 
     Rails.cache.write(cache_key, attempts + 1, expires_in: FAILED_RETRY_WINDOW)
     false
+  end
+
+  def render_totals_updated
+    flash.now[:notice] = "Totals updated for selected shipping details."
+    render :new, status: :ok
+  end
+
+  def render_incomplete_profile_error
+    flash.now[:alert] = "Please provide a complete shipping address and province."
+    render :new, status: :unprocessable_entity
+  end
+
+  def save_checkout_profile_to_user!
+    current_user.update!(
+      address: @checkout_profile[:address],
+      city: @checkout_profile[:city],
+      postal_code: @checkout_profile[:postal_code],
+      province_id: @checkout_profile[:province_id]
+    )
   end
 
   def checkout_profile_params

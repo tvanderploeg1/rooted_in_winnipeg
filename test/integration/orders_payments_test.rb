@@ -5,6 +5,8 @@ class OrdersPaymentsTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
 
   setup do
+    Rails.cache.clear
+
     @province = Province.create!(
       name: "Manitoba Payment",
       abbreviation: "MP",
@@ -31,6 +33,10 @@ class OrdersPaymentsTest < ActionDispatch::IntegrationTest
       shipping_address: "777 Test St, Winnipeg, R3C0V8",
       province_snapshot: "Manitoba"
     )
+  end
+
+  teardown do
+    Rails.cache.clear
   end
 
   test "signed in user can start payment for pending order" do
@@ -149,6 +155,25 @@ class OrdersPaymentsTest < ActionDispatch::IntegrationTest
     assert_equal "failed", @order.status
   end
 
+  test "failed payment retry is throttled after retry limit" do
+    sign_in @user
+    @order.update!(status: "failed", stripe_payment_id: "cs_old_123")
+
+    original_cache = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+    Rails.cache.write("order:#{@order.id}:failed_retry_attempts", 5, expires_in: 15.minutes)
+
+    with_stubbed_checkout_session_create_raises("Stripe create should not run when retry is throttled") do
+      post start_payment_order_path(@order)
+    end
+
+    assert_redirected_to order_path(@order)
+    follow_redirect!
+    assert_includes response.body, "Too many payment retries. Please wait and try again."
+  ensure
+    Rails.cache = original_cache
+  end
+
   private
 
   def with_stubbed_checkout_session_create(fake_session)
@@ -173,5 +198,17 @@ class OrdersPaymentsTest < ActionDispatch::IntegrationTest
     yield
   ensure
     Stripe::Checkout::Session.singleton_class.send(:define_method, :retrieve, original_retrieve)
+  end
+
+  def with_stubbed_checkout_session_create_raises(error_message)
+    original_create = Stripe::Checkout::Session.method(:create)
+
+    Stripe::Checkout::Session.singleton_class.send(:define_method, :create) do |*_args|
+      raise error_message
+    end
+
+    yield
+  ensure
+    Stripe::Checkout::Session.singleton_class.send(:define_method, :create, original_create)
   end
 end
