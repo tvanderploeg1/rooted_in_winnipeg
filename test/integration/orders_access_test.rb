@@ -105,6 +105,20 @@ class OrdersAccessTest < ActionDispatch::IntegrationTest
     assert_equal "cs_test_123", @order_one.stripe_payment_id
   end
 
+  test "signed in user can restart payment for pending order after cancel" do
+    sign_in @user_one
+    @order_one.update!(stripe_payment_id: "cs_old_123")
+
+    with_stubbed_checkout_session_create do
+      post start_payment_order_path(@order_one)
+    end
+
+    assert_redirected_to "https://checkout.stripe.com/c/pay/cs_test_123"
+    @order_one.reload
+    assert_equal "pending", @order_one.status
+    assert_equal "cs_test_123", @order_one.stripe_payment_id
+  end
+
   test "guest is redirected from payment success" do
     get payment_success_order_path(@order_one, session_id: "cs_test_123")
 

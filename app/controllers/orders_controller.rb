@@ -59,11 +59,6 @@ class OrdersController < ApplicationController
       return
     end
 
-    if @order.stripe_payment_id.present?
-      redirect_to order_path(@order), alert: "Payment has already been started for this order."
-      return
-    end
-
     checkout_session = Stripe::Checkout::Session.create(
       mode: "payment",
       line_items: [
@@ -82,7 +77,7 @@ class OrdersController < ApplicationController
         order_id: @order.id.to_s,
         user_id: current_user.id.to_s
       },
-      success_url: payment_success_order_url(@order, session_id: "{CHECKOUT_SESSION_ID}"),
+      success_url: "#{payment_success_order_url(@order)}?session_id={CHECKOUT_SESSION_ID}",
       cancel_url: payment_cancel_order_url(@order)
     )
 
