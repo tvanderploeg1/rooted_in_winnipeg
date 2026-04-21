@@ -21,6 +21,9 @@ STRIPE_PUBLISHABLE_KEY=replace_me
 
 The app can boot without Stripe keys for basic local development, but if you want to seed product data you will need a valid `PERENUAL_API_KEY` because `db/seeds.rb` fetches plant data from the Perenual API.
 
+Stripe note:
+- Checkout uses Stripe-hosted redirect confirmation (no local webhook/CLI setup required for basic payment flow).
+
 ## 2) Install dependencies
 
 ```bash
