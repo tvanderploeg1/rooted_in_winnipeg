@@ -43,8 +43,9 @@
       </div>
     </div>
 
-    <% if @order.pending? %>
+    <% if @order.pending? || @order.failed? %>
       <%= button_to "Pay with Stripe", start_payment_order_path(@order), method: :post, data: { turbo: false }, class: "button is-link mb-3" %>
+      <%= button_to "Cancel Order", cancel_order_order_path(@order), method: :post, data: { turbo_confirm: "Cancel this order? You will not be able to retry payment." }, class: "button is-danger is-light mb-3 ml-2" %>
     <% end %>
 
     <%= link_to "Back to Orders", orders_path, class: "button is-light" %>

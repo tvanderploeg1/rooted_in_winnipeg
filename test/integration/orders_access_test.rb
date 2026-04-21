@@ -119,6 +119,20 @@ class OrdersAccessTest < ActionDispatch::IntegrationTest
     assert_equal "cs_test_123", @order_one.stripe_payment_id
   end
 
+  test "signed in user can retry payment for failed order" do
+    sign_in @user_one
+    @order_one.update!(status: "failed", stripe_payment_id: "cs_old_123")
+
+    with_stubbed_checkout_session_create do
+      post start_payment_order_path(@order_one)
+    end
+
+    assert_redirected_to "https://checkout.stripe.com/c/pay/cs_test_123"
+    @order_one.reload
+    assert_equal "failed", @order_one.status
+    assert_equal "cs_test_123", @order_one.stripe_payment_id
+  end
+
   test "guest is redirected from payment success" do
     get payment_success_order_path(@order_one, session_id: "cs_test_123")
 
@@ -127,7 +141,7 @@ class OrdersAccessTest < ActionDispatch::IntegrationTest
 
   test "signed in user payment success marks order paid" do
     sign_in @user_one
-    @order_one.update!(stripe_payment_id: "cs_test_123")
+    @order_one.update!(status: "failed", stripe_payment_id: "cs_test_123")
 
     with_stubbed_checkout_session_retrieve(
       session_id: "cs_test_123",
@@ -199,6 +213,33 @@ class OrdersAccessTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Order payment is already finalized."
   end
 
+  test "signed in user can cancel pending order and cannot restart payment after" do
+    sign_in @user_one
+    @order_one.update!(status: "pending", stripe_payment_id: "cs_test_123")
+
+    post cancel_order_order_path(@order_one)
+
+    assert_redirected_to order_path(@order_one)
+    @order_one.reload
+    assert_equal "cancelled", @order_one.status
+
+    post start_payment_order_path(@order_one)
+    assert_redirected_to order_path(@order_one)
+    follow_redirect!
+    assert_includes response.body, "Only pending or failed orders can start payment."
+  end
+
+  test "stripe payment cancel marks pending order failed for retry" do
+    sign_in @user_one
+    @order_one.update!(status: "pending")
+
+    get payment_cancel_order_path(@order_one)
+
+    assert_redirected_to order_path(@order_one)
+    @order_one.reload
+    assert_equal "failed", @order_one.status
+  end
+
   test "signed in user cannot view another users payment success route" do
     sign_in @user_one
 
@@ -216,7 +257,7 @@ class OrdersAccessTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to order_path(@order_two)
     follow_redirect!
-    assert_includes response.body, "Only pending orders can start payment."
+    assert_includes response.body, "Only pending or failed orders can start payment."
   end
 
   test "signed in user cannot start payment for another users order" do

@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   resources :categories, only: [ :show ]
   resources :orders, only: [ :index, :show, :new, :create ] do
     post :start_payment, on: :member
+    post :cancel_order, on: :member
     get :payment_success, on: :member
     get :payment_cancel, on: :member
   end

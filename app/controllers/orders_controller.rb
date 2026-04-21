@@ -1,6 +1,9 @@
 class OrdersController < ApplicationController
+  FAILED_RETRY_LIMIT = 5
+  FAILED_RETRY_WINDOW = 15.minutes
+
   before_action :authenticate_user!
-  before_action :set_order, only: [ :show, :start_payment, :payment_success, :payment_cancel ]
+  before_action :set_order, only: [ :show, :start_payment, :cancel_order, :payment_success, :payment_cancel ]
   rescue_from ActiveRecord::RecordNotFound, with: :handle_order_not_found
 
   def new
@@ -54,8 +57,13 @@ class OrdersController < ApplicationController
   end
 
   def start_payment
-    unless @order.pending?
-      redirect_to order_path(@order), alert: "Only pending orders can start payment."
+    unless @order.pending? || @order.failed?
+      redirect_to order_path(@order), alert: "Only pending or failed orders can start payment."
+      return
+    end
+
+    if @order.failed? && failed_retry_throttled?(@order)
+      redirect_to order_path(@order), alert: "Too many payment retries. Please wait and try again."
       return
     end
 
@@ -90,8 +98,21 @@ class OrdersController < ApplicationController
     redirect_to order_path(@order), alert: "Unable to start Stripe payment: #{e.message}"
   end
 
+  def cancel_order
+    unless @order.pending? || @order.failed?
+      redirect_to order_path(@order), alert: "Only pending or failed orders can be canceled."
+      return
+    end
+
+    if @order.transition_to!("cancelled")
+      redirect_to order_path(@order), notice: "Order canceled. Payment cannot be restarted."
+    else
+      redirect_to order_path(@order), alert: "Could not cancel this order."
+    end
+  end
+
   def payment_success
-    unless @order.pending?
+    unless @order.pending? || @order.failed?
       redirect_to order_path(@order), notice: "Order payment is already finalized."
       return
     end
@@ -130,10 +151,24 @@ class OrdersController < ApplicationController
   end
 
   def payment_cancel
-    redirect_to order_path(@order), alert: "Payment was canceled. Order remains pending."
+    if @order.pending? && @order.transition_to!("failed")
+      redirect_to order_path(@order), alert: "Payment was canceled. Order marked failed so you can retry."
+      return
+    end
+
+    redirect_to order_path(@order), alert: "Payment was canceled."
   end
 
   private
+
+  def failed_retry_throttled?(order)
+    cache_key = "order:#{order.id}:failed_retry_attempts"
+    attempts = Rails.cache.read(cache_key).to_i
+    return true if attempts >= FAILED_RETRY_LIMIT
+
+    Rails.cache.write(cache_key, attempts + 1, expires_in: FAILED_RETRY_WINDOW)
+    false
+  end
 
   def checkout_profile_params
     params.require(:checkout).permit(:address, :city, :postal_code, :province_id)

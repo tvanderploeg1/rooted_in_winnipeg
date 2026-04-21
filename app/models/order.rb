@@ -1,9 +1,10 @@
 class Order < ApplicationRecord
   ALLOWED_STATUS_TRANSITIONS = {
-    "pending" => %w[paid failed],
+    "pending" => %w[paid failed cancelled],
     "paid" => %w[shipped],
     "shipped" => [],
-    "failed" => []
+    "failed" => %w[paid cancelled],
+    "cancelled" => []
   }.freeze
 
   belongs_to :user
@@ -11,7 +12,7 @@ class Order < ApplicationRecord
   has_many :order_items, dependent: :destroy
   has_many :products, through: :order_items
 
-  enum :status, { pending: "pending", paid: "paid", shipped: "shipped", failed: "failed" }
+  enum :status, { pending: "pending", paid: "paid", shipped: "shipped", failed: "failed", cancelled: "cancelled" }
 
   validates :status, presence: true, inclusion: { in: statuses.keys }
   validates :shipping_address, :province_snapshot, presence: true
