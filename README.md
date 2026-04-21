@@ -78,10 +78,17 @@ docker build -t rooted-in-winnipeg .
 Run the container:
 
 ```bash
-docker run --rm -it -p 3000:3000 --env-file .env rooted-in-winnipeg
+docker run --rm -p 3000:80 \
+  -e RAILS_MASTER_KEY="$(cat config/master.key)" \
+  -e DB_HOST=host.docker.internal \
+  -e DB_USERNAME=dev \
+  -e DB_PASSWORD="your_postgres_password_here" \
+  -e PERENUAL_API_KEY='your_perenual_key' \
+  --name rooted-in-winnipeg \
+  rooted-in-winnipeg
 ```
 
-Then open [http://localhost:3000](http://localhost:3000).
+Quick check (in a second terminal): `curl -I http://localhost:3000`
 
 ## Useful commands
 

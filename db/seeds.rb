@@ -29,24 +29,17 @@ PROVINCE_ROWS = [
   { name: "Yukon", abbreviation: "YT", gst_rate: 0.05, pst_rate: 0.0, hst_rate: 0.0 }
 ].freeze
 
-SEED_TARGET_PRODUCTS = 750
-PRODUCTS_PER_CATEGORY = SEED_TARGET_PRODUCTS / CATEGORY_NAMES.size
+SEED_TARGET_PRODUCTS = ENV.fetch("SEED_TARGET_PRODUCTS", 750).to_i
+SEED_TARGET_PRODUCTS = 750 if SEED_TARGET_PRODUCTS <= 0
+
+PRODUCTS_PER_CATEGORY = (SEED_TARGET_PRODUCTS.to_f / CATEGORY_NAMES.size).ceil
 PERENUAL_API_BASE_URL = "https://perenual.com/api/v2/species-list"
-MAX_API_PAGES = 95
+MAX_API_PAGES = ENV.fetch("MAX_API_PAGES", 160).to_i
+MAX_API_PAGES = 160 if MAX_API_PAGES <= 0
 
 PERENUAL_API_KEY = ENV["PERENUAL_API_KEY"].to_s
 if PERENUAL_API_KEY.blank?
   raise "Missing PERENUAL_API_KEY in environment."
-end
-
-if ENV["SEED_TARGET_PRODUCTS"].present?
-  target_override = ENV["SEED_TARGET_PRODUCTS"].to_i
-  if target_override.positive?
-    Object.send(:remove_const, :SEED_TARGET_PRODUCTS)
-    Object.send(:remove_const, :PRODUCTS_PER_CATEGORY)
-    SEED_TARGET_PRODUCTS = target_override
-    PRODUCTS_PER_CATEGORY = (SEED_TARGET_PRODUCTS.to_f / CATEGORY_NAMES.size).ceil
-  end
 end
 
 def seed_categories!
@@ -98,7 +91,6 @@ def upsert_seed_product!(species_row:, category_name:, category_lookup:, seen_co
 
   scientific_name = Array(species_row["scientific_name"]).first.to_s.strip
   common_name = species_row["common_name"].to_s.strip
-  return false if maple_common_name?(common_name)
 
   normalized_common_name = normalize_common_name(common_name)
   return false if normalized_common_name.present? && seen_common_names.include?(normalized_common_name)
@@ -198,17 +190,70 @@ end
 
 def choose_category_name(species_row, category_counts)
   predicted = classify_category_name(species_row)
-  return predicted if predicted.present?
+  return predicted if predicted.present? && category_counts[predicted] < PRODUCTS_PER_CATEGORY
 
-  nil
-end
+  family = species_row["family"].to_s.downcase
+  genus = species_row["genus"].to_s.downcase
+  name = species_row["common_name"].to_s.downcase
+  sunlight = Array(species_row["sunlight"]).join(" ").downcase
+  watering = species_row["watering"].to_s.downcase
 
-def maple_common_name?(common_name)
-  common_name.to_s.downcase.include?("maple")
+  category_scores = {
+    "Succulents & Cacti" => 0,
+    "Herbs & Edibles" => 0,
+    "Low Light" => 0,
+    "Outdoor Seasonal" => 0,
+    "Tropicals" => 0
+  }
+
+  category_scores["Succulents & Cacti"] += 2 if family.match?(/cactaceae|crassulaceae|aizoaceae|asphodelaceae/)
+  category_scores["Succulents & Cacti"] += 2 if genus.match?(/aloe|haworthia|echeveria|sedum|opuntia|mammillaria/)
+  category_scores["Succulents & Cacti"] += 1 if name.match?(/cactus|succulent/)
+  category_scores["Succulents & Cacti"] += 1 if watering.match?(/minimum|infrequent|\blow\b/)
+
+  category_scores["Herbs & Edibles"] += 2 if family.match?(/lamiaceae|apiaceae|brassicaceae|solanaceae/)
+  category_scores["Herbs & Edibles"] += 2 if genus.match?(/ocimum|mentha|petroselinum|coriandrum|thymus|rosmarinus|salvia/)
+  category_scores["Herbs & Edibles"] += 1 if name.match?(/basil|mint|parsley|cilantro|thyme|rosemary|oregano|dill|chive|sage|lettuce|kale|tomato|pepper/)
+
+  category_scores["Low Light"] += 2 if sunlight.match?(/shade|partial shade|indirect|low light/)
+  category_scores["Outdoor Seasonal"] += 2 if sunlight.match?(/full sun|direct sun/)
+  category_scores["Outdoor Seasonal"] += 1 unless watering.match?(/frequent|\bhigh\b/)
+
+  category_scores["Tropicals"] += 2 if family.match?(/araceae|marantaceae|musaceae|bromeliaceae|orchidaceae/)
+  category_scores["Tropicals"] += 2 if genus.match?(/monstera|philodendron|pothos|calathea|maranta|anthurium|ficus|dracaena/)
+  category_scores["Tropicals"] += 1 if sunlight.match?(/bright indirect|filtered/)
+
+  best_scored_category, best_score = category_scores.max_by { |_, score| score }
+  if best_score.positive? && category_counts[best_scored_category] < PRODUCTS_PER_CATEGORY
+    return best_scored_category
+  end
+
+  # Keep ingestion moving and softly rebalance toward underfilled categories.
+  category_counts.min_by { |_, count| count }&.first
 end
 
 def normalize_common_name(common_name)
   common_name.to_s.downcase.strip.gsub(/\s+/, " ")
+end
+
+def print_seed_variety_report!
+  normalized_names = Product.where.not(name: [ nil, "" ]).pluck(:name).map { |name| normalize_common_name(name) }
+  duplicate_rows = normalized_names
+    .group_by(&:itself)
+    .transform_values(&:count)
+    .select { |_, count| count > 1 }
+    .sort_by { |_, count| -count }
+    .first(10)
+
+  puts "Unique normalized product names: #{normalized_names.uniq.size}/#{normalized_names.size}"
+  if duplicate_rows.any?
+    puts "Top duplicate normalized names:"
+    duplicate_rows.each do |name, count|
+      puts "  - #{name}: #{count}"
+    end
+  else
+    puts "No duplicate normalized product names found."
+  end
 end
 
 def seed_products_from_perenual!
@@ -258,6 +303,7 @@ end
 seed_categories!
 seed_provinces!
 seed_products_from_perenual!
+print_seed_variety_report!
 
 puts "== Seeding complete =="
 if Rails.env.development?
