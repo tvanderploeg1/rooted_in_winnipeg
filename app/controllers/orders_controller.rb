@@ -1,6 +1,6 @@
 class OrdersController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_order, only: [ :show, :start_payment, :payment ]
+  before_action :set_order, only: [ :show, :start_payment, :payment_success, :payment_cancel ]
   rescue_from ActiveRecord::RecordNotFound, with: :handle_order_not_found
 
   def new
@@ -64,42 +64,78 @@ class OrdersController < ApplicationController
       return
     end
 
-    payment_intent = Stripe::PaymentIntent.create(
-      amount: @order.total_cents,
-      currency: "cad",
+    checkout_session = Stripe::Checkout::Session.create(
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: "cad",
+            product_data: {
+              name: "Rooted in Winnipeg Order ##{@order.id}"
+            },
+            unit_amount: @order.total_cents
+          },
+          quantity: 1
+        }
+      ],
       metadata: {
-        order_id: @order.id,
-        user_id: current_user.id
+        order_id: @order.id.to_s,
+        user_id: current_user.id.to_s
       },
-      automatic_payment_methods: { enabled: true }
+      success_url: payment_success_order_url(@order, session_id: "{CHECKOUT_SESSION_ID}"),
+      cancel_url: payment_cancel_order_url(@order)
     )
 
     @order.update!(
-      stripe_payment_id: payment_intent.id,
-      stripe_customer_id: payment_intent.customer
+      stripe_payment_id: checkout_session.id
     )
 
-    redirect_to payment_order_path(@order), notice: "Payment started. Enter payment details to continue."
+    redirect_to checkout_session.url, allow_other_host: true, status: :see_other
   rescue Stripe::StripeError => e
     redirect_to order_path(@order), alert: "Unable to start Stripe payment: #{e.message}"
   end
 
-  def payment
+  def payment_success
     unless @order.pending?
-      redirect_to order_path(@order), alert: "Payment page is only available for pending orders."
+      redirect_to order_path(@order), notice: "Order payment is already finalized."
       return
     end
 
-    if @order.stripe_payment_id.blank?
-      redirect_to order_path(@order), alert: "Start payment first before opening payment details."
+    session_id = Array(params[:session_id]).first.to_s
+    if session_id.blank?
+      redirect_to order_path(@order), alert: "Missing Stripe session confirmation."
       return
     end
 
-    payment_intent = Stripe::PaymentIntent.retrieve(@order.stripe_payment_id)
-    @stripe_client_secret = payment_intent.client_secret
-    @stripe_publishable_key = ENV["STRIPE_PUBLISHABLE_KEY"].to_s
+    session = Stripe::Checkout::Session.retrieve(session_id)
+
+    unless session.metadata&.order_id.to_s == @order.id.to_s
+      redirect_to order_path(@order), alert: "Stripe confirmation did not match this order."
+      return
+    end
+
+    if session.payment_status == "paid" && @order.transition_to!("paid")
+      raw_payment_intent = Array(session.payment_intent).first
+      payment_intent_id = if raw_payment_intent.respond_to?(:id)
+        raw_payment_intent.id.to_s
+      else
+        raw_payment_intent.to_s
+      end
+      @order.update!(
+        stripe_payment_id: payment_intent_id.presence || session_id,
+        stripe_customer_id: session.customer
+      )
+      redirect_to order_path(@order), notice: "Payment confirmed and order marked as paid."
+      return
+    end
+
+    redirect_to order_path(@order), alert: "Stripe did not confirm payment for this order."
   rescue Stripe::StripeError => e
-    redirect_to order_path(@order), alert: "Unable to load Stripe payment details: #{e.message}"
+    redirect_to order_path(@order), alert: "Unable to verify Stripe payment: #{e.message}"
+  end
+
+  def payment_cancel
+    redirect_to order_path(@order), alert: "Payment was canceled. Order remains pending."
   end
 
   private
