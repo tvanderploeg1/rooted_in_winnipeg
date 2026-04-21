@@ -1,6 +1,14 @@
 # Rooted in Winnipeg
 
-Rails 8 e-commerce capstone project for a Winnipeg-focused plant shop.
+Rails 8 e-commerce project for a Winnipeg-focused plant shop.
+
+## Project highlights
+
+- Bulma-based storefront UI for a consistent look across pages
+- Real plant product seed data from the Perenual API
+- Devise authentication, session cart, and checkout flow
+- Province-based tax calculations and order snapshot integrity
+- Stripe-hosted payment confirmation flow
 
 ## Prerequisites
 
@@ -59,9 +67,35 @@ bin/dev
 
 Then open [http://localhost:3000](http://localhost:3000).
 
+## 5) Run with Docker
+
+Build the image:
+
+```bash
+docker build -t rooted-in-winnipeg .
+```
+
+Run the container:
+
+```bash
+docker run --rm -it -p 3000:3000 --env-file .env rooted-in-winnipeg
+```
+
+Then open [http://localhost:3000](http://localhost:3000).
+
 ## Useful commands
 
 - Run tests: `bin/rails test`
+- Run focused order/payment tests: `bin/rails test test/models/order_test.rb test/integration/orders_access_test.rb test/integration/orders_payments_test.rb`
 - RuboCop: `bin/rubocop`
-- Brakeman: `bin/brakeman`
+- Brakeman: `bundle exec brakeman --no-pager`
 - Bundler audit: `bin/bundler-audit`
+
+## Quick demo test:
+
+1. Sign up / log in with a customer account.
+2. Add product(s) to cart and update quantity.
+3. Go to checkout and click `Update Totals`.
+4. Place order and confirm order detail page loads.
+5. From order detail, start Stripe payment and verify redirect-return flow.
+6. Confirm order status updates in order history.

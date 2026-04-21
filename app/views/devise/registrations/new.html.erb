@@ -37,7 +37,7 @@
             </div>
 
             <div class="field">
-              <%= f.label :province, class: "label" %>
+              <%= f.label :province_id, "Province", class: "label" %>
               <div class="control">
                 <div class="select is-fullwidth">
                   <%= f.collection_select :province_id, Province.order(:name), :id, :name %>

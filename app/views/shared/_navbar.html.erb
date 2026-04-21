@@ -1,16 +1,20 @@
-<nav class="navbar is-light" role="navigation" aria-label="main navigation">
+<nav class="navbar is-light" aria-label="main navigation">
   <div class="navbar-brand">
     <%= link_to root_path, class: "navbar-item" do %>
-      <%= image_tag "riw_logo_nav.png", alt: "Rooted In Winnipeg", class: "nav-logo" %>
+      <img
+        src="<%= asset_path("riw_logo_nav.png") %>"
+        alt="Rooted In Winnipeg"
+        class="nav-logo"
+      >
       <span class="ml-2 has-text-weight-bold">Rooted In Winnipeg</span>
     <% end %>
+
   </div>
 
-  <div class="navbar-menu">
+  <div class="navbar-menu is-active">
     <div class="navbar-start">
       <%= link_to "Home", root_path, class: "navbar-item" %>
       <%= link_to "Products", products_path, class: "navbar-item" %>
-      <%# <%= link_to "Categories", categories_path, class: "navbar-item" %>
       <%= link_to "About", about_path, class: "navbar-item" %>
     </div>
 

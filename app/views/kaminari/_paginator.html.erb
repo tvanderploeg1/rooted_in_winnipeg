@@ -7,7 +7,7 @@
     paginator:     the paginator that renders the pagination tags inside
 -%>
 <%= paginator.render do -%>
-  <nav class="pagination is-centered is-small" role="navigation" aria-label="pager">
+  <nav class="pagination is-centered is-small" aria-label="pager">
     <%= prev_page_tag unless current_page.first? %>
     <%= next_page_tag unless current_page.last? %>
     <ul class="pagination-list">

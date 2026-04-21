@@ -47,3 +47,13 @@
 .navbar {
   min-height: 4.5rem;
 }
+
+@media screen and (max-width: 1023px) {
+  .navbar-burger {
+    display: none;
+  }
+
+  .navbar-menu {
+    display: block !important;
+  }
+}
