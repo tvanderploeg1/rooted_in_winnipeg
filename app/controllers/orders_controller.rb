@@ -57,12 +57,12 @@ class OrdersController < ApplicationController
   end
 
   def start_payment
-    unless @order.pending? || @order.failed?
+    unless payment_start_allowed?
       redirect_to order_path(@order), alert: "Only pending or failed orders can start payment."
       return
     end
 
-    if @order.failed? && failed_retry_throttled?(@order)
+    if retry_throttled_for_failed_order?
       redirect_to order_path(@order), alert: "Too many payment retries. Please wait and try again."
       return
     end
@@ -104,7 +104,7 @@ class OrdersController < ApplicationController
       return
     end
 
-    if @order.transition_to!("cancelled")
+    if @order.transition_to("cancelled")
       redirect_to order_path(@order), notice: "Order canceled. Payment cannot be restarted."
     else
       redirect_to order_path(@order), alert: "Could not cancel this order."
@@ -112,34 +112,28 @@ class OrdersController < ApplicationController
   end
 
   def payment_success
-    unless @order.pending? || @order.failed?
+    unless payment_start_allowed?
       redirect_to order_path(@order), notice: "Order payment is already finalized."
       return
     end
 
-    session_id = Array(params[:session_id]).first.to_s
+    session_id = stripe_session_id
     if session_id.blank?
       redirect_to order_path(@order), alert: "Missing Stripe session confirmation."
       return
     end
 
-    session = Stripe::Checkout::Session.retrieve(session_id)
-
-    unless session.metadata&.order_id.to_s == @order.id.to_s
+    stripe_session = Stripe::Checkout::Session.retrieve(session_id)
+    unless stripe_session_matches_order?(stripe_session)
       redirect_to order_path(@order), alert: "Stripe confirmation did not match this order."
       return
     end
 
-    if session.payment_status == "paid" && @order.transition_to!("paid")
-      raw_payment_intent = Array(session.payment_intent).first
-      payment_intent_id = if raw_payment_intent.respond_to?(:id)
-        raw_payment_intent.id.to_s
-      else
-        raw_payment_intent.to_s
-      end
+    if stripe_session.payment_status == "paid" && @order.transition_to("paid")
+      payment_intent_id = stripe_payment_intent_id(stripe_session)
       @order.update!(
         stripe_payment_id: payment_intent_id.presence || session_id,
-        stripe_customer_id: session.customer
+        stripe_customer_id: stripe_session.customer
       )
       redirect_to order_path(@order), notice: "Payment confirmed and order marked as paid."
       return
@@ -151,7 +145,7 @@ class OrdersController < ApplicationController
   end
 
   def payment_cancel
-    if @order.pending? && @order.transition_to!("failed")
+    if @order.pending? && @order.transition_to("failed")
       redirect_to order_path(@order), alert: "Payment was canceled. Order marked failed so you can retry."
       return
     end
@@ -160,6 +154,29 @@ class OrdersController < ApplicationController
   end
 
   private
+
+  def payment_start_allowed?
+    @order.pending? || @order.failed?
+  end
+
+  def retry_throttled_for_failed_order?
+    @order.failed? && failed_retry_throttled?(@order)
+  end
+
+  def stripe_session_id
+    Array(params[:session_id]).first.to_s
+  end
+
+  def stripe_session_matches_order?(stripe_session)
+    stripe_session.metadata&.order_id.to_s == @order.id.to_s
+  end
+
+  def stripe_payment_intent_id(stripe_session)
+    raw_payment_intent = Array(stripe_session.payment_intent).first
+    return raw_payment_intent.id.to_s if raw_payment_intent.respond_to?(:id)
+
+    raw_payment_intent.to_s
+  end
 
   def failed_retry_throttled?(order)
     cache_key = "order:#{order.id}:failed_retry_attempts"

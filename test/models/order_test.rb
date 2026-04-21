@@ -25,53 +25,53 @@ class OrderTest < ActiveSupport::TestCase
   test "allows pending to paid transition" do
     order = build_order(status: "pending")
 
-    assert order.transition_to!("paid")
+    assert order.transition_to("paid")
     assert_equal "paid", order.reload.status
   end
 
   test "allows paid to shipped transition" do
     order = build_order(status: "pending")
-    order.transition_to!("paid")
+    order.transition_to("paid")
 
-    assert order.transition_to!("shipped")
+    assert order.transition_to("shipped")
     assert_equal "shipped", order.reload.status
   end
 
   test "blocks pending to shipped transition" do
     order = build_order(status: "pending")
 
-    assert_not order.transition_to!("shipped")
+    assert_not order.transition_to("shipped")
     assert_equal "pending", order.reload.status
   end
 
   test "blocks shipped to pending transition" do
     order = build_order(status: "pending")
-    order.transition_to!("paid")
-    order.transition_to!("shipped")
+    order.transition_to("paid")
+    order.transition_to("shipped")
 
-    assert_not order.transition_to!("pending")
+    assert_not order.transition_to("pending")
     assert_equal "shipped", order.reload.status
   end
 
   test "blocks failed to paid transition" do
     order = build_order(status: "failed")
 
-    assert order.transition_to!("paid")
+    assert order.transition_to("paid")
     assert_equal "paid", order.reload.status
   end
 
   test "allows pending to cancelled transition" do
     order = build_order(status: "pending")
 
-    assert order.transition_to!("cancelled")
+    assert order.transition_to("cancelled")
     assert_equal "cancelled", order.reload.status
   end
 
   test "blocks cancelled to paid transition" do
     order = build_order(status: "pending")
-    order.transition_to!("cancelled")
+    order.transition_to("cancelled")
 
-    assert_not order.transition_to!("paid")
+    assert_not order.transition_to("paid")
     assert_equal "cancelled", order.reload.status
   end
 
